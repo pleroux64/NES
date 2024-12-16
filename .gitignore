@@ -1,0 +1,17 @@
+# Ignore build artifacts
+/build/*
+*.o
+*.test_runner
+
+# Ignore temporary or editor files
+*.swp
+*.bak
+*.tmp
+*.log
+
+# Ignore duplicate/variant source files
+src/cpu.cpp.source2
+src/cpu.cpp.sourse.txt
+
+# Ignore large binary files unless explicitly included
+roms/*.nes

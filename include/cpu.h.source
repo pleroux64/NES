@@ -1,0 +1,79 @@
+#ifndef CPU_H
+#define CPU_H
+
+#include <cstdint>
+#include <array>
+#include <functional>
+#include <unordered_map>
+#include <string>
+
+class CPU {
+public:
+    // Public StatusFlags enum
+    enum StatusFlags {
+        C = 0, // Carry
+        Z = 1, // Zero
+        I = 2, // Interrupt Disable
+        D = 3, // Decimal Mode
+        B = 4, // Break
+        V = 6, // Overflow
+        N = 7  // Negative
+    };
+
+    // Registers
+    uint8_t A = 0; // Accumulator
+    uint8_t X = 0; // X Register
+    uint8_t Y = 0; // Y Register
+    uint8_t SP = 0xFF; // Stack Pointer
+    uint16_t PC = 0; // Program Counter
+    uint8_t P = 0; // Status Flags
+
+    // Memory
+    std::array<uint8_t, 0x10000> memory{}; // 64KB of memory
+
+    // Methods
+    void reset();
+    void execute();
+    void loadROM(const std::string& filename);
+
+    // Opcode Table
+    using OpcodeFunction = std::function<void(CPU&)>;
+    std::unordered_map<uint8_t, OpcodeFunction> opcodeTable;
+
+    void initializeOpcodeTable();
+
+    // Helper methods
+    uint8_t fetchByte();
+    uint16_t fetchWord();
+    void setFlag(uint8_t flag, bool value);
+    bool getFlag(uint8_t flag);
+    void performADC(uint8_t value);
+    void performAND(uint8_t value);
+    void performASL(uint8_t& value);
+    void performBCC();
+    void performBIT(uint8_t value);
+    void performBMI();
+    void performBRK();
+    void performBVC();
+    void performBVS();
+    void performCMP(uint8_t value);
+    void performCPX(uint8_t value);
+    void performCPY(uint8_t value);
+    void performDEC(uint16_t addr);
+    void performEOR(uint8_t value);
+    void performINC(uint16_t addr);
+    void performINX();
+    void performINY();
+    void performJMP(uint16_t address);
+    void performJSR(uint16_t address);
+    void updateLDAFlags();
+    void performLSR(uint8_t &value);
+    void performLSRMemory(uint16_t address);
+    void performORA(uint8_t value);
+    void pushToStack(uint8_t value);
+    uint8_t pullFromStack();
+    void performRTI();
+    void performSBC(uint8_t value);
+};
+
+#endif // CPU_H
