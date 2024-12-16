@@ -53,6 +53,10 @@ public:
     // Cycles
     int cycles = 0;
 
+    // NMI Flag
+    bool nmiRequested = false; // Indicates whether an NMI has been requested
+
+
     // Memory
     std::array<uint8_t, 0x10000> memory{}; // 64KB of memory
 
@@ -61,6 +65,11 @@ public:
     void execute();
     void executeWithCycles();
     void loadROM(const std::string& filename);
+    void printMemory(uint16_t start, uint16_t end);
+    void dumpMemoryToConsole(uint16_t start, uint16_t end);
+    void handleUndefinedOpcode(uint8_t opcode);
+    void requestNMI();
+    void handleNMI();
 
     // Opcode Table
     using OpcodeFunction = std::function<void(CPU&)>;

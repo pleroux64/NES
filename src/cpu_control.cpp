@@ -164,6 +164,10 @@ opcodeTable[0x60] = [](CPU &cpu) {
     cpu.pushToStack(flags);
     std::cout << "[BRK Debug] Flags Pushed to Stack: " << std::bitset<8>(flags) << std::endl;
 
+    // Debugging: Log the stack state after pushing
+    std::cerr << "[BRK Debug] Stack after push operations:\n";
+    cpu.debugStack();
+
     // Set the Interrupt Disable flag
     cpu.setFlag(CPU::I, true);
 
@@ -171,14 +175,19 @@ opcodeTable[0x60] = [](CPU &cpu) {
     uint16_t handlerAddress = cpu.memory[0xFFFE] | (cpu.memory[0xFFFF] << 8);
     std::cout << "[BRK Debug] Handler Address Loaded: " << std::hex << handlerAddress << std::endl;
 
+    // Validate the handler address
+    if (handlerAddress < 0x8000 || handlerAddress >= 0x10000) {
+        std::cerr << "[Error] Invalid IRQ/BRK handler address: 0x" 
+                  << std::hex << handlerAddress << ". Exiting.\n";
+        exit(1);
+    }
+
     // Jump to the handler
     cpu.PC = handlerAddress;
 
     // Debug output for verification
-    std::cout << "[BRK Debug] PC = " << std::hex << returnAddress
-              << ", Handler Address = " << handlerAddress
-              << ", Flags = " << std::bitset<8>(flags)
-              << std::endl;
+    std::cout << "[BRK Debug] Jumped to Handler: PC = 0x" << std::hex << cpu.PC
+              << ", Flags = " << std::bitset<8>(flags) << "\n";
 };
 
 
