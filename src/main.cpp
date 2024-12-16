@@ -36,19 +36,30 @@ void loadROM(CPU& cpu, const std::string& filepath) {
 
     // Mirror PRG-ROM for smaller sizes
     if (prgSize == 0x4000) { // If the PRG-ROM is 16KB, mirror it to 0xC000
-        std::copy(cpu.memory.data() + 0x8000, cpu.memory.data() + 0xC000, cpu.memory.data() + 0xC000);
-
+        for (size_t i = 0; i < 0x4000; ++i) {
+            cpu.memory[0xC000 + i] = cpu.memory[0x8000 + i];
+        }
     }
 
-    // Load reset vector (last 6 bytes of PRG-ROM)
-    cpu.memory[0xFFFC] = cpu.memory[0x8000 + prgSize - 6]; // Reset vector low byte
-    cpu.memory[0xFFFD] = cpu.memory[0x8000 + prgSize - 5]; // Reset vector high byte
+    // Set the reset vector in memory to start at 0xC000
+    cpu.memory[0xFFFC] = 0x00; // Low byte of 0xC000
+    cpu.memory[0xFFFD] = 0xC0; // High byte of 0xC000
+
+    // Debugging information
+    uint8_t resetLow = cpu.memory[0xFFFC];
+    uint8_t resetHigh = cpu.memory[0xFFFD];
+    uint16_t resetVector = resetLow | (resetHigh << 8);
 
     std::cout << "ROM loaded successfully: " << filepath << std::endl;
     std::cout << "PRG-ROM size: " << prgSize << " bytes" << std::endl;
+    std::cout << "Reset vector set to: 0x" << std::hex << resetVector << std::endl;
 
     rom.close();
 }
+
+
+
+
 
 void debugCPU(const CPU& cpu) {
     // Print out CPU state
@@ -73,10 +84,14 @@ int main() {
     loadROM(cpu, romPath);
 
     // Execute instructions
-    for (int i = 0; i < 100; ++i) {
+    for (int i = 0; i < 100; ++i) { // Adjust this number as needed
         cpu.execute();
         debugCPU(cpu); // Debug CPU state after each instruction
+        
+        // Check if we've reached the end of the test
+        
     }
+    //cpu.dumpMemoryToConsole(0x6000, 0x7FFF);
 
     return 0;
 }

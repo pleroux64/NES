@@ -8,23 +8,27 @@
 
 
 // Reset the CPU to its initial state
-void CPU::reset()
-{
+void CPU::reset() {
     // Fetch the reset vector (stored at 0xFFFC and 0xFFFD)
     uint8_t resetLow = memory[0xFFFC];
     uint8_t resetHigh = memory[0xFFFD];
     uint16_t resetVector = resetLow | (resetHigh << 8);
 
-    PC = resetVector;  // Set PC to the address from the reset vector
+    // if (resetVector == 0x0000) {
+    //     std::cerr << "[Error] Reset vector is uninitialized or invalid in ROM!" << std::endl;
+    //     exit(1);
+    // }
+
+    PC = 0xC000; // Set PC to the address from the reset vector
     SP = 0xFF;
     A = X = Y = P = 0; // Reset registers and status flags
     initializeOpcodeTable(); // Ensure opcode table is initialized
     cycles = 0;
 
     // Debug outputs
-    std::cerr << "[Debug] CPU Reset: Memory[0xFFFC] = 0x" 
+    std::cerr << "[Debug] CPU Reset: Memory[0xFFFC] = 0x"
               << std::hex << static_cast<int>(resetLow) << std::endl;
-    std::cerr << "[Debug] CPU Reset: Memory[0xFFFD] = 0x" 
+    std::cerr << "[Debug] CPU Reset: Memory[0xFFFD] = 0x"
               << std::hex << static_cast<int>(resetHigh) << std::endl;
     std::cerr << "[Debug] CPU Reset: PC set to 0x" << std::hex << PC << std::endl;
 }
@@ -79,8 +83,57 @@ bool CPU::getFlag(uint8_t flag) {
     return result;
 }
 
+void CPU::printMemory(uint16_t start, uint16_t end) {
+    for (uint16_t addr = start; addr <= end; ++addr) {
+        std::cout << "Memory[0x" << std::hex << addr << "] = 0x"
+                  << std::hex << static_cast<int>(memory[addr]) << std::endl;
+    }
+}
+
+void CPU::dumpMemoryToConsole(uint16_t start, uint16_t end) {
+    for (uint16_t addr = start; addr <= end; addr++) {
+        std::cout << "Memory[0x" << std::hex << addr << "] = 0x" 
+                  << std::hex << (int)memory[addr] << std::endl;
+    }
+}
+
+void CPU::handleUndefinedOpcode(uint8_t opcode) {
+    std::cerr << "[Error] Undefined opcode encountered: 0x" 
+              << std::hex << static_cast<int>(opcode) << " at PC: 0x"
+              << std::hex << PC << std::endl;
+
+    // Skip the undefined opcode
+    PC++; 
+
+    // Add optional logging or error handling here, if needed
+}
+
 void CPU::addCycles(int cycles) {
     this->cycles += cycles;
+}
+
+void CPU::requestNMI() {
+    nmiRequested = true;
+}
+
+void CPU::handleNMI() {
+    // Push current program counter onto the stack (high byte, then low byte)
+    pushToStack((PC >> 8) & 0xFF);
+    pushToStack(PC & 0xFF);
+
+    // Push processor flags onto the stack
+    pushToStack(P);
+
+    // Set interrupt disable flag (I)
+    setFlag(I, true);
+
+    // Fetch the NMI vector from memory
+    uint8_t vectorLow = memory[0xFFFA];
+    uint8_t vectorHigh = memory[0xFFFB];
+    PC = (vectorHigh << 8) | vectorLow;
+
+    // Add cycles for handling the NMI
+    addCycles(7); // NMI typically takes 7 cycles
 }
 
 
@@ -135,6 +188,10 @@ void addCycleLogic(std::unordered_map<uint8_t, std::function<void(CPU&)>>& opcod
 // Execute a single instruction
 void CPU::execute()
 {
+    if (nmiRequested) {
+        handleNMI();
+        nmiRequested = false; // Clear the signal after handling
+    }
     uint8_t opcode = fetchByte();
     if (opcodeTable.count(opcode))
     {
@@ -143,6 +200,7 @@ void CPU::execute()
     else
     {
         std::cerr << "Unknown opcode: 0x" << std::hex << (int)opcode << std::dec << std::endl;
+        //handleUndefinedOpcode(opcode);
     }
 }
 
