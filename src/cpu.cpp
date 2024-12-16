@@ -1,5 +1,6 @@
 #include "cpu.h"
 #include "opcode_cycles.h"
+#include "cycle_exceptions.h"
 
 #include <iostream>
 #include <fstream>
@@ -9,14 +10,24 @@
 // Reset the CPU to its initial state
 void CPU::reset()
 {
-    PC = 0x8000; // Typical starting address for NES
+    // Fetch the reset vector (stored at 0xFFFC and 0xFFFD)
+    uint8_t resetLow = memory[0xFFFC];
+    uint8_t resetHigh = memory[0xFFFD];
+    uint16_t resetVector = resetLow | (resetHigh << 8);
+
+    PC = resetVector;  // Set PC to the address from the reset vector
     SP = 0xFF;
-    A = X = Y = P = 0;
+    A = X = Y = P = 0; // Reset registers and status flags
     initializeOpcodeTable(); // Ensure opcode table is initialized
     cycles = 0;
 
+    // Debug outputs
+    std::cerr << "[Debug] CPU Reset: Memory[0xFFFC] = 0x" 
+              << std::hex << static_cast<int>(resetLow) << std::endl;
+    std::cerr << "[Debug] CPU Reset: Memory[0xFFFD] = 0x" 
+              << std::hex << static_cast<int>(resetHigh) << std::endl;
+    std::cerr << "[Debug] CPU Reset: PC set to 0x" << std::hex << PC << std::endl;
 }
-
 // Load a ROM into memory starting at address 0x8000
 void CPU::loadROM(const std::string &filename)
 {
@@ -88,17 +99,34 @@ std::function<void(CPU&)> withBaseCycles(uint8_t opcode, int baseCycles, std::fu
 }
 
 void addCycleLogic(std::unordered_map<uint8_t, std::function<void(CPU&)>>& opcodeTable,
-                   const std::unordered_map<uint8_t, int>& opcodeCycles) {
+                   const std::unordered_map<uint8_t, int>& opcodeCycles,
+                   const std::unordered_map<uint8_t, std::function<int(CPU&)>>& cycleExceptions) {
     for (const auto& [opcode, baseCycles] : opcodeCycles) {
+        const uint8_t capturedOpcode = opcode;
+        const int capturedBaseCycles = baseCycles;
+
         if (opcodeTable.count(opcode)) {
+            auto originalHandler = opcodeTable[opcode];
+
             // Wrap the handler with cycle logic
-            opcodeTable[opcode] = withBaseCycles(opcode, baseCycles, opcodeTable[opcode]);
+            opcodeTable[opcode] = [capturedOpcode, capturedBaseCycles, originalHandler, &cycleExceptions](CPU& cpu) {
+                cpu.addCycles(capturedBaseCycles); // Add base cycles
+                originalHandler(cpu);              // Call the original handler logic
+
+                // Dynamically find the exception handler
+                auto exceptionIt = cycleExceptions.find(capturedOpcode);
+                if (exceptionIt != cycleExceptions.end()) {
+                    int extraCycles = exceptionIt->second(cpu); // Call the exception handler
+                    cpu.addCycles(extraCycles);                // Add the extra cycles
+                }
+            };
         } else {
-            std::cerr << "Warning: No handler defined for opcode 0x" 
+            std::cerr << "Warning: No handler defined for opcode 0x"
                       << std::hex << static_cast<int>(opcode) << '\n';
         }
     }
 }
+
 
 
 
@@ -135,6 +163,7 @@ void CPU::initializeOpcodeTable()
     initializeStackOpcodes(opcodeTable);
     initializeFlagsOpcodes(opcodeTable);
 
-    addCycleLogic(opcodeTable, opcodeCycles);
+    addCycleLogic(opcodeTable, opcodeCycles, cycleExceptions);
+
 
 }

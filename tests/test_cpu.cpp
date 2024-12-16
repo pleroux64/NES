@@ -2748,108 +2748,108 @@ TEST_CASE("Opcode Cycles - Base Cycle Count Test")
     }
 }
 
-// TEST_CASE("Opcode Cycles - Base Cycle Count Test with Flags")
-// {
-//     CPU cpu;
-//     cpu.reset();
+TEST_CASE("Opcode Cycles - Base Cycle Count Test with Flags")
+{
+    CPU cpu;
+    cpu.reset();
 
-//     SUBCASE("ADC Immediate - Base Cycle Count and Flags")
-//     {
-//         cpu.memory[0x8000] = 0x69; // ADC Immediate opcode
-//         cpu.memory[0x8001] = 0x10; // Immediate value
-//         cpu.A = 0x20;              // Initial accumulator value
-//         cpu.setFlag(CPU::C, false); // Ensure Carry is clear
-//         cpu.cycles = 0;
+    SUBCASE("ADC Immediate - Base Cycle Count and Flags")
+    {
+        cpu.memory[0x8000] = 0x69; // ADC Immediate opcode
+        cpu.memory[0x8001] = 0x10; // Immediate value
+        cpu.A = 0x20;              // Initial accumulator value
+        cpu.setFlag(CPU::C, false); // Ensure Carry is clear
+        cpu.cycles = 0;
 
-//         cpu.execute();
+        cpu.execute();
 
-//         CHECK(cpu.cycles == 2); // ADC Immediate should take 2 cycles
-//         CHECK(cpu.A == 0x30);   // Accumulator should be updated
-//         CHECK(cpu.getFlag(CPU::C) == false); // No carry
-//         CHECK(cpu.getFlag(CPU::Z) == false); // Result is not zero
-//     }
+        CHECK(cpu.cycles == 2); // ADC Immediate should take 2 cycles
+        CHECK(cpu.A == 0x30);   // Accumulator should be updated
+        CHECK(cpu.getFlag(CPU::C) == false); // No carry
+        CHECK(cpu.getFlag(CPU::Z) == false); // Result is not zero
+    }
 
-//     SUBCASE("LDA Zero Page - Base Cycle Count and Flags")
-//     {
-//         cpu.memory[0x8000] = 0xA5; // LDA Zero Page opcode
-//         cpu.memory[0x8001] = 0x10; // Address in Zero Page
-//         cpu.memory[0x0010] = 0x00; // Value at address 0x0010 (Zero)
-//         cpu.cycles = 0;
+    SUBCASE("LDA Zero Page - Base Cycle Count and Flags")
+    {
+        cpu.memory[0x8000] = 0xA5; // LDA Zero Page opcode
+        cpu.memory[0x8001] = 0x10; // Address in Zero Page
+        cpu.memory[0x0010] = 0x00; // Value at address 0x0010 (Zero)
+        cpu.cycles = 0;
 
-//         cpu.execute();
+        cpu.execute();
 
-//         CHECK(cpu.cycles == 3); // LDA Zero Page should take 3 cycles
-//         CHECK(cpu.A == 0x00);   // Accumulator should be loaded with value
-//         CHECK(cpu.getFlag(CPU::Z) == true); // Zero flag should be set
-//         CHECK(cpu.getFlag(CPU::N) == false); // Negative flag should be clear
-//     }
+        CHECK(cpu.cycles == 3); // LDA Zero Page should take 3 cycles
+        CHECK(cpu.A == 0x00);   // Accumulator should be loaded with value
+        CHECK(cpu.getFlag(CPU::Z) == true); // Zero flag should be set
+        CHECK(cpu.getFlag(CPU::N) == false); // Negative flag should be clear
+    }
 
-//     SUBCASE("STA Absolute - Base Cycle Count")
-//     {
-//         cpu.memory[0x8000] = 0x8D; // STA Absolute opcode
-//         cpu.memory[0x8001] = 0x00; // Low byte of address
-//         cpu.memory[0x8002] = 0x80; // High byte of address
-//         cpu.A = 0x55;              // Accumulator value
-//         cpu.cycles = 0;
+    SUBCASE("STA Absolute - Base Cycle Count")
+    {
+        cpu.memory[0x8000] = 0x8D; // STA Absolute opcode
+        cpu.memory[0x8001] = 0x00; // Low byte of address
+        cpu.memory[0x8002] = 0x80; // High byte of address
+        cpu.A = 0x55;              // Accumulator value
+        cpu.cycles = 0;
 
-//         cpu.execute();
+        cpu.execute();
 
-//         CHECK(cpu.cycles == 4);             // STA Absolute should take 4 cycles
-//         CHECK(cpu.memory[0x8000] == 0x55);  // Value should be stored in memory
-//     }
+        CHECK(cpu.cycles == 4);             // STA Absolute should take 4 cycles
+        CHECK(cpu.memory[0x8000] == 0x55);  // Value should be stored in memory
+    }
 
-//     SUBCASE("ASL Accumulator - Base Cycle Count and Flags")
-//     {
-//         cpu.memory[0x8000] = 0x0A; // ASL Accumulator opcode
-//         cpu.A = 0x80;              // Initial accumulator value
-//         cpu.cycles = 0;
+    SUBCASE("ASL Accumulator - Base Cycle Count and Flags")
+    {
+        cpu.memory[0x8000] = 0x0A; // ASL Accumulator opcode
+        cpu.A = 0x80;              // Initial accumulator value
+        cpu.cycles = 0;
 
-//         cpu.execute();
+        cpu.execute();
 
-//         CHECK(cpu.cycles == 2);       // ASL Accumulator should take 2 cycles
-//         CHECK(cpu.A == 0x00);         // Result should be zero
-//         CHECK(cpu.getFlag(CPU::C) == true);  // Carry should be set
-//         CHECK(cpu.getFlag(CPU::Z) == true);  // Zero flag should be set
-//     }
+        CHECK(cpu.cycles == 2);       // ASL Accumulator should take 2 cycles
+        CHECK(cpu.A == 0x00);         // Result should be zero
+        CHECK(cpu.getFlag(CPU::C) == true);  // Carry should be set
+        CHECK(cpu.getFlag(CPU::Z) == true);  // Zero flag should be set
+    }
 
-//     SUBCASE("LDX Immediate - Base Cycle Count and Flags")
-//     {
-//         cpu.memory[0x8000] = 0xA2; // LDX Immediate opcode
-//         cpu.memory[0x8001] = 0xFF; // Immediate value (negative in signed context)
-//         cpu.cycles = 0;
+    SUBCASE("LDX Immediate - Base Cycle Count and Flags")
+    {
+        cpu.memory[0x8000] = 0xA2; // LDX Immediate opcode
+        cpu.memory[0x8001] = 0xFF; // Immediate value (negative in signed context)
+        cpu.cycles = 0;
 
-//         cpu.execute();
+        cpu.execute();
 
-//         CHECK(cpu.cycles == 2);      // LDX Immediate should take 2 cycles
-//         CHECK(cpu.X == 0xFF);        // X register should be updated
-//         CHECK(cpu.getFlag(CPU::Z) == false); // Zero flag should be clear
-//         CHECK(cpu.getFlag(CPU::N) == true);  // Negative flag should be set
-//     }
+        CHECK(cpu.cycles == 2);      // LDX Immediate should take 2 cycles
+        CHECK(cpu.X == 0xFF);        // X register should be updated
+        CHECK(cpu.getFlag(CPU::Z) == false); // Zero flag should be clear
+        CHECK(cpu.getFlag(CPU::N) == true);  // Negative flag should be set
+    }
 
-//     SUBCASE("DEX - Base Cycle Count and Flags")
-//     {
-//         cpu.memory[0x8000] = 0xCA; // DEX opcode
-//         cpu.X = 0x01;              // Set X register to 1
-//         cpu.cycles = 0;
+    SUBCASE("DEX - Base Cycle Count and Flags")
+    {
+        cpu.memory[0x8000] = 0xCA; // DEX opcode
+        cpu.X = 0x01;              // Set X register to 1
+        cpu.cycles = 0;
 
-//         cpu.execute();
+        cpu.execute();
 
-//         CHECK(cpu.cycles == 2);      // DEX should take 2 cycles
-//         CHECK(cpu.X == 0x00);        // X register decremented
-//         CHECK(cpu.getFlag(CPU::Z) == true);  // Zero flag should be set
-//         CHECK(cpu.getFlag(CPU::N) == false); // Negative flag should be clear
-//     }
+        CHECK(cpu.cycles == 2);      // DEX should take 2 cycles
+        CHECK(cpu.X == 0x00);        // X register decremented
+        CHECK(cpu.getFlag(CPU::Z) == true);  // Zero flag should be set
+        CHECK(cpu.getFlag(CPU::N) == false); // Negative flag should be clear
+    }
 
-//     SUBCASE("RTS - Base Cycle Count")
-//     {
-//         cpu.memory[0x8000] = 0x60; // RTS opcode
-//         cpu.pushToStack(0x12);     // Push return address (high byte)
-//         cpu.pushToStack(0x34);     // Push return address (low byte)
-//         cpu.cycles = 0;
+    SUBCASE("RTS - Base Cycle Count")
+    {
+        cpu.memory[0x8000] = 0x60; // RTS opcode
+        cpu.pushToStack(0x12);     // Push return address (high byte)
+        cpu.pushToStack(0x34);     // Push return address (low byte)
+        cpu.cycles = 0;
 
-//         cpu.execute();
+        cpu.execute();
 
-//         CHECK(cpu.cycles == 6);  // RTS should take 6 cycles
-//         CHECK(cpu.PC == 0x1235); // PC restored and incremented
-//     }
-// }
+        CHECK(cpu.cycles == 6);  // RTS should take 6 cycles
+        CHECK(cpu.PC == 0x1235); // PC restored and incremented
+    }
+}
