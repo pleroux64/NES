@@ -8,29 +8,14 @@
 
 
 // Reset the CPU to its initial state
-void CPU::reset() {
-    // Fetch the reset vector (stored at 0xFFFC and 0xFFFD)
-    uint8_t resetLow = memory[0xFFFC];
-    uint8_t resetHigh = memory[0xFFFD];
-    uint16_t resetVector = resetLow | (resetHigh << 8);
-
-    // if (resetVector == 0x0000) {
-    //     std::cerr << "[Error] Reset vector is uninitialized or invalid in ROM!" << std::endl;
-    //     exit(1);
-    // }
-
-    PC = 0xC000; // Set PC to the address from the reset vector
+void CPU::reset()
+{
+    PC = 0x8000; // Typical starting address for NES
     SP = 0xFF;
-    A = X = Y = P = 0; // Reset registers and status flags
+    A = X = Y = P = 0;
     initializeOpcodeTable(); // Ensure opcode table is initialized
     cycles = 0;
 
-    // Debug outputs
-    std::cerr << "[Debug] CPU Reset: Memory[0xFFFC] = 0x"
-              << std::hex << static_cast<int>(resetLow) << std::endl;
-    std::cerr << "[Debug] CPU Reset: Memory[0xFFFD] = 0x"
-              << std::hex << static_cast<int>(resetHigh) << std::endl;
-    std::cerr << "[Debug] CPU Reset: PC set to 0x" << std::hex << PC << std::endl;
 }
 // Load a ROM into memory starting at address 0x8000
 void CPU::loadROM(const std::string &filename)
@@ -117,24 +102,50 @@ void CPU::requestNMI() {
 }
 
 void CPU::handleNMI() {
-    // Push current program counter onto the stack (high byte, then low byte)
-    pushToStack((PC >> 8) & 0xFF);
-    pushToStack(PC & 0xFF);
+    std::cerr << "[NMI Debug] NMI Triggered. Starting NMI handler..." << std::endl;
 
-    // Push processor flags onto the stack
-    pushToStack(P);
+    // Push the high and low bytes of the current PC onto the stack
+    pushToStack((PC >> 8) & 0xFF); // High byte of PC
+    pushToStack(PC & 0xFF);        // Low byte of PC
+    std::cerr << "[NMI Debug] PC Pushed: High = 0x" 
+              << std::hex << ((PC >> 8) & 0xFF) 
+              << ", Low = 0x" << (PC & 0xFF) << std::endl;
 
-    // Set interrupt disable flag (I)
+    // Explicitly calculate flags to push with Break flag cleared
+    uint8_t flagsToPush = P & ~0x10; // Clear Break flag
+    std::cerr << "[NMI Debug] Original P: 0b" << std::bitset<8>(P) << std::endl;
+    std::cerr << "[NMI Debug] Flags to Push (Break Cleared): 0b" 
+              << std::bitset<8>(flagsToPush) << std::endl;
+
+    // Manually validate the value
+    if (flagsToPush & 0x10) {
+        std::cerr << "[Error] Break flag still set in flagsToPush! Forcing correction." << std::endl;
+        flagsToPush &= ~0x10;
+    }
+
+    pushToStack(flagsToPush);
+
+    // Set the Interrupt Disable flag
     setFlag(I, true);
+    std::cerr << "[NMI Debug] Interrupt Disable Flag Set. New P: 0b" 
+              << std::bitset<8>(P) << std::endl;
 
-    // Fetch the NMI vector from memory
+    // Load the NMI vector (from memory addresses 0xFFFA and 0xFFFB)
     uint8_t vectorLow = memory[0xFFFA];
     uint8_t vectorHigh = memory[0xFFFB];
     PC = (vectorHigh << 8) | vectorLow;
 
-    // Add cycles for handling the NMI
-    addCycles(7); // NMI typically takes 7 cycles
+    std::cerr << "[NMI Debug] NMI Vector Loaded: Low = 0x" 
+              << std::hex << static_cast<int>(vectorLow)
+              << ", High = 0x" << static_cast<int>(vectorHigh) 
+              << ", New PC = 0x" << PC << std::endl;
+
+    // Add the 7 cycles for NMI handling
+    addCycles(7);
+    std::cerr << "[NMI Debug] NMI Handling Complete. Cycles Added: 7, Total Cycles = " 
+              << std::dec << cycles << std::endl;
 }
+
 
 
 std::function<void(CPU&)> withBaseCycles(uint8_t opcode, int baseCycles, std::function<void(CPU&)> handler) {

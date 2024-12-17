@@ -63,9 +63,33 @@ void CPU::performRTI()
               << " N=" << getFlag(CPU::N) << "\n";
 }
 void CPU::pushToStack(uint8_t value) {
-    memory[0x0100 + SP] = value; // Stack is at $0100-$01FF
-    SP = (SP - 1) & 0xFF;        // Decrement SP with wrap-around
+    // Confirm the value being pushed
+    std::cerr << "[Stack Debug] Value to Push: 0x" 
+              << std::hex << static_cast<int>(value)
+              << " to Address: 0x" << (0x0100 + SP)
+              << ", SP Before: 0x" << static_cast<int>(SP) 
+              << std::endl;
+
+    // Write value to stack memory
+    memory[0x0100 + SP] = value;
+
+    // Validate the write
+    uint8_t writtenValue = memory[0x0100 + SP];
+    if (writtenValue != value) {
+        std::cerr << "[Error] Stack Write Mismatch: Expected 0x"
+                  << std::hex << static_cast<int>(value) 
+                  << ", Found 0x" << static_cast<int>(writtenValue) << std::endl;
+    }
+
+    // Decrement SP with wrap-around
+    SP = (SP - 1) & 0xFF;
+
+    // Confirm SP after decrement
+    std::cerr << "[Stack Debug] SP After Decrement: 0x" 
+              << std::hex << static_cast<int>(SP) << std::endl;
 }
+
+
 
 uint8_t CPU::popFromStack() {
     SP = (SP + 1) & 0xFF;        // Increment SP with wrap-around (0x00 to 0xFF)
@@ -164,10 +188,6 @@ opcodeTable[0x60] = [](CPU &cpu) {
     cpu.pushToStack(flags);
     std::cout << "[BRK Debug] Flags Pushed to Stack: " << std::bitset<8>(flags) << std::endl;
 
-    // Debugging: Log the stack state after pushing
-    std::cerr << "[BRK Debug] Stack after push operations:\n";
-    cpu.debugStack();
-
     // Set the Interrupt Disable flag
     cpu.setFlag(CPU::I, true);
 
@@ -175,21 +195,15 @@ opcodeTable[0x60] = [](CPU &cpu) {
     uint16_t handlerAddress = cpu.memory[0xFFFE] | (cpu.memory[0xFFFF] << 8);
     std::cout << "[BRK Debug] Handler Address Loaded: " << std::hex << handlerAddress << std::endl;
 
-    // Validate the handler address
-    if (handlerAddress < 0x8000 || handlerAddress >= 0x10000) {
-        std::cerr << "[Error] Invalid IRQ/BRK handler address: 0x" 
-                  << std::hex << handlerAddress << ". Exiting.\n";
-        exit(1);
-    }
-
     // Jump to the handler
     cpu.PC = handlerAddress;
 
     // Debug output for verification
-    std::cout << "[BRK Debug] Jumped to Handler: PC = 0x" << std::hex << cpu.PC
-              << ", Flags = " << std::bitset<8>(flags) << "\n";
+    std::cout << "[BRK Debug] PC = " << std::hex << returnAddress
+              << ", Handler Address = " << handlerAddress
+              << ", Flags = " << std::bitset<8>(flags)
+              << std::endl;
 };
-
 
 
 
