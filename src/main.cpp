@@ -1,6 +1,13 @@
 #include <iostream>
 #include <fstream>
 #include "cpu.h"
+#include "controller.h"
+#include <SDL2/SDL.h>
+#include "ppu.h"
+
+const int SCREEN_WIDTH = 256;  // NES screen width
+const int SCREEN_HEIGHT = 240; // NES screen height
+const int FRAME_DELAY = 1000 / 60; // ~60 FPS delay
 
 void loadROM(CPU& cpu, const std::string& filepath) {
     std::ifstream rom(filepath, std::ios::binary);
@@ -57,9 +64,15 @@ void loadROM(CPU& cpu, const std::string& filepath) {
     rom.close();
 }
 
+void displayFramebuffer(SDL_Renderer* renderer, SDL_Texture* texture, const PPU& ppu) {
+    // Update the texture with the framebuffer data
+    SDL_UpdateTexture(texture, nullptr, ppu.framebuffer.data(), SCREEN_WIDTH * sizeof(uint32_t));
 
-
-
+    // Clear and present the renderer
+    SDL_RenderClear(renderer);
+    SDL_RenderCopy(renderer, texture, nullptr, nullptr);
+    SDL_RenderPresent(renderer);
+}
 
 void debugCPU(const CPU& cpu) {
     // Print out CPU state
@@ -75,23 +88,90 @@ void debugCPU(const CPU& cpu) {
 
 int main() {
     CPU cpu;
+    Controller controller;
+    PPU ppu;
 
-    // Reset CPU
+    // Link the PPU to the CPU
+    ppu.setCPU(&cpu);
+
+    // SDL Initialization with error checking
+    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+        std::cerr << "Failed to initialize SDL: " << SDL_GetError() << std::endl;
+        return 1;
+    }
+
+    SDL_Window* window = SDL_CreateWindow("NES Emulator", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+                                          SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
+    if (!window) {
+        std::cerr << "Failed to create SDL window: " << SDL_GetError() << std::endl;
+        SDL_Quit();
+        return 1;
+    }
+
+    SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+    if (!renderer) {
+        std::cerr << "Failed to create SDL renderer: " << SDL_GetError() << std::endl;
+        SDL_DestroyWindow(window);
+        SDL_Quit();
+        return 1;
+    }
+
+    SDL_Texture* texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING,
+                                             SCREEN_WIDTH, SCREEN_HEIGHT);
+    if (!texture) {
+        std::cerr << "Failed to create SDL texture: " << SDL_GetError() << std::endl;
+        SDL_DestroyRenderer(renderer);
+        SDL_DestroyWindow(window);
+        SDL_Quit();
+        return 1;
+    }
+
+    // Reset CPU and PPU
     cpu.reset();
+    ppu.reset();
 
     // Load ROM
-    const std::string romPath = "roms/nestest.nes";
+    const std::string romPath = "roms/super_mario_bros.nes";
     loadROM(cpu, romPath);
 
-    // Execute instructions
-    for (int i = 0; i < 100; ++i) { // Adjust this number as needed
+    // Main emulation loop
+    bool running = true;
+    Uint32 frameStart, frameTime;
+
+    while (running) {
+        frameStart = SDL_GetTicks();
+
+        // Poll controller input
+        controller.pollKeyboard();
+        cpu.memory[0x4016] = controller.getButtonState();
+
+        // Execute CPU instructions and render PPU frame
         cpu.execute();
-        debugCPU(cpu); // Debug CPU state after each instruction
-        
-        // Check if we've reached the end of the test
-        
+        ppu.renderFrame();
+
+        // Update the screen
+        displayFramebuffer(renderer, texture, ppu);
+
+        // Handle events
+        SDL_Event e;
+        while (SDL_PollEvent(&e)) {
+            if (e.type == SDL_QUIT) {
+                running = false;
+            }
+        }
+
+        // Frame timing for ~60 FPS
+        frameTime = SDL_GetTicks() - frameStart;
+        if (frameTime < FRAME_DELAY) {
+            SDL_Delay(FRAME_DELAY - frameTime);
+        }
     }
-    //cpu.dumpMemoryToConsole(0x6000, 0x7FFF);
+
+    // Cleanup SDL resources
+    SDL_DestroyTexture(texture);
+    SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(window);
+    SDL_Quit();
 
     return 0;
 }
