@@ -111,17 +111,10 @@ void CPU::handleNMI() {
               << std::hex << ((PC >> 8) & 0xFF) 
               << ", Low = 0x" << (PC & 0xFF) << std::endl;
 
-    // Explicitly calculate flags to push with Break flag cleared
-    uint8_t flagsToPush = P & ~0x10; // Clear Break flag
-    std::cerr << "[NMI Debug] Original P: 0b" << std::bitset<8>(P) << std::endl;
-    std::cerr << "[NMI Debug] Flags to Push (Break Cleared): 0b" 
+    // Prepare flags to push (clear Break flag and set Unused bit)
+    uint8_t flagsToPush = (P & ~0x10) | 0x20; // Clear Break flag, set Unused bit
+    std::cerr << "[NMI Debug] Flags to Push (Break Cleared, Unused Set): 0b" 
               << std::bitset<8>(flagsToPush) << std::endl;
-
-    // Manually validate the value
-    if (flagsToPush & 0x10) {
-        std::cerr << "[Error] Break flag still set in flagsToPush! Forcing correction." << std::endl;
-        flagsToPush &= ~0x10;
-    }
 
     pushToStack(flagsToPush);
 
@@ -130,7 +123,7 @@ void CPU::handleNMI() {
     std::cerr << "[NMI Debug] Interrupt Disable Flag Set. New P: 0b" 
               << std::bitset<8>(P) << std::endl;
 
-    // Load the NMI vector (from memory addresses 0xFFFA and 0xFFFB)
+    // Load the NMI vector address (0xFFFA and 0xFFFB)
     uint8_t vectorLow = memory[0xFFFA];
     uint8_t vectorHigh = memory[0xFFFB];
     PC = (vectorHigh << 8) | vectorLow;
@@ -140,11 +133,12 @@ void CPU::handleNMI() {
               << ", High = 0x" << static_cast<int>(vectorHigh) 
               << ", New PC = 0x" << PC << std::endl;
 
-    // Add the 7 cycles for NMI handling
+    // Add the 7 cycles required for NMI handling
     addCycles(7);
     std::cerr << "[NMI Debug] NMI Handling Complete. Cycles Added: 7, Total Cycles = " 
               << std::dec << cycles << std::endl;
 }
+
 
 
 
@@ -202,7 +196,9 @@ void CPU::execute()
     if (nmiRequested) {
         handleNMI();
         nmiRequested = false; // Clear the signal after handling
+        return; // Prevent further opcode execution this cycle
     }
+
     uint8_t opcode = fetchByte();
     if (opcodeTable.count(opcode))
     {
@@ -211,10 +207,8 @@ void CPU::execute()
     else
     {
         std::cerr << "Unknown opcode: 0x" << std::hex << (int)opcode << std::dec << std::endl;
-        //handleUndefinedOpcode(opcode);
     }
 }
-
 
 
 // Initialize the opcode table

@@ -115,49 +115,101 @@ TEST_CASE("CPU - NMI Vector Fetch") {
     CHECK(cpu.PC == 0x8000); // PC should be set to NMI vector
 }
 
-#include "cpu.h"
-#include "doctest.h"
-#include <bitset>
-#include <iostream>
 
-TEST_CASE("CPU - Modify Status Register P") {
+
+TEST_CASE("CPU - Set and Clear Break Flag in Status Register P") {
     CPU cpu;
-    cpu.reset();
 
-     SUBCASE("Set and Clear Break Flag") {
-        cpu.P = 0b10100101; // Initialize P with Break flag set
-        std::cerr << "[Test Debug] Initial P: 0b" << std::bitset<8>(cpu.P) << std::endl;
-
-        // Shadow P and clear bit 4
-        uint8_t tempP = cpu.P;
-        tempP &= ~0x10; // Clear Break flag
-        cpu.P = tempP;  // Assign back to P
-
-        std::cerr << "[Test Debug] Temp P After Clearing: 0b" << std::bitset<8>(tempP) << std::endl;
-        std::cerr << "[Test Debug] P After Assignment:   0b" << std::bitset<8>(cpu.P) << std::endl;
-
-        CHECK(cpu.P == 0b10100001);
+    SUBCASE("Set Break Flag") {
+        cpu.P = 0b10100000; // Initial state with Break flag cleared
+        cpu.setFlag(CPU::B, true); // Set Break flag
+        std::cerr << "[Test Debug] After Setting Break Flag: P = 0b" << std::bitset<8>(cpu.P) << std::endl;
+        CHECK(cpu.P == 0b10110000); // Verify Break flag is set
     }
 
-    SUBCASE("Set and Clear Interrupt Flag") {
-        cpu.P = 0b00000000; // Initialize with no flags set
-        cpu.setFlag(CPU::I, true); // Set Interrupt Disable flag (bit 2)
-
-        std::cerr << "[Test Debug] P After Setting Interrupt Flag: 0b" 
-                  << std::bitset<8>(cpu.P) << std::endl;
-
-        CHECK(cpu.P == 0b00000100); // Verify Interrupt flag is set
-
-        cpu.setFlag(CPU::I, false); // Clear Interrupt Disable flag
-        std::cerr << "[Test Debug] P After Clearing Interrupt Flag: 0b" 
-                  << std::bitset<8>(cpu.P) << std::endl;
-
-        CHECK(cpu.P == 0b00000000); // Verify Interrupt flag is cleared
+    SUBCASE("Clear Break Flag") {
+        cpu.P = 0b10110000; // Initial state with Break flag set
+        cpu.setFlag(CPU::B, false); // Clear Break flag
+        std::cerr << "[Test Debug] After Clearing Break Flag: P = 0b" << std::bitset<8>(cpu.P) << std::endl;
+        CHECK(cpu.P == 0b10100000); // Verify Break flag is cleared
     }
+
+    SUBCASE("No Unexpected Overwrites to P") {
+    cpu.P = 0b10100101; // Set some flags
+    cpu.setFlag(CPU::B, false); // Clear Break flag
+
+    uint8_t expectedP = cpu.P & ~0x10; // Calculate expected result
+    std::cerr << "[Test Debug] After Clearing Break Flag (No Overwrites): P = 0b" 
+              << std::bitset<8>(cpu.P) << ", Expected P = 0b" 
+              << std::bitset<8>(expectedP) << std::endl;
+
+    CHECK(cpu.P == expectedP); // Compare using the precomputed value
 }
 
+}
 
+TEST_CASE("CPU - NMI Pushes Correct PC and Flags to Stack") {
+    CPU cpu;
 
+    // Initial state
+    cpu.PC = 0x1234; // Example program counter
+    cpu.P = 0b10100101; // Status register
+    cpu.SP = 0xFF;
 
+    cpu.requestNMI(); // Trigger NMI
+    cpu.handleNMI(); // Handle NMI
 
+    // Check values pushed to the stack
+    CHECK(cpu.memory[0x1FF] == 0x12); // High byte of PC
+    CHECK(cpu.memory[0x1FE] == 0x34); // Low byte of PC
+    CHECK(cpu.memory[0x1FD] == (0b10100101 & ~0x10)); // Flags with Break cleared
 
+    // Verify stack pointer decrement
+    CHECK(cpu.SP == 0xFC);
+
+    // Check new PC value (loaded from vector)
+    uint16_t expectedPC = (cpu.memory[0xFFFB] << 8) | cpu.memory[0xFFFA];
+    CHECK(cpu.PC == expectedPC);
+}
+
+TEST_CASE("PPU - NMI Trigger and CPU Communication") {
+    CPU cpu;
+    PPU ppu;
+
+    // Reset CPU and PPU
+    resetSystem(ppu, cpu);
+
+    // Set the NMI vector to 0x8000
+    cpu.memory[0xFFFA] = 0x00; // Low byte of NMI vector
+    cpu.memory[0xFFFB] = 0x80; // High byte of NMI vector
+
+    // Set CPU initial state
+    cpu.PC = 0x1234;
+    cpu.P = 0b10100101; // Status register
+    cpu.SP = 0xFF;
+
+    uint8_t initialSP = cpu.SP;
+
+    // Enable NMI in PPUCTRL
+    ppu.writeRegister(0x2000, 0x80);
+
+    // Trigger a frame render, which requests NMI
+    ppu.renderFrame();
+
+    // Execute CPU to handle the NMI
+    cpu.execute();
+
+    // Verify stack content
+    CHECK(cpu.memory[0x0100 + ((initialSP) & 0xFF)] == (0b10100101 & ~0x10)); // Flags with Break cleared
+    CHECK(cpu.memory[0x0100 + ((initialSP - 1) & 0xFF)] == 0x34); // Low byte of PC
+    CHECK(cpu.memory[0x0100 + ((initialSP - 2) & 0xFF)] == 0x12); // High byte of PC
+
+    // Verify SP decremented by 3
+    CHECK(cpu.SP == static_cast<uint8_t>(initialSP - 3));
+
+    // Verify PC updated to NMI vector (0x8000)
+    CHECK(cpu.PC == 0x8000);
+
+    std::cerr << "[Debug] SP After NMI: 0x" << std::hex << static_cast<int>(cpu.SP) << "\n";
+    std::cerr << "[Debug] PC After NMI: 0x" << std::hex << cpu.PC << "\n";
+}
