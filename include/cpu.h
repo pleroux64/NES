@@ -70,6 +70,7 @@ public:
     void handleUndefinedOpcode(uint8_t opcode);
     void requestNMI();
     void handleNMI();
+    void debugNMIVector();
 
     // Opcode Table
     using OpcodeFunction = std::function<void(CPU&)>;

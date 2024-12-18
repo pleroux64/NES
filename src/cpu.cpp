@@ -104,40 +104,54 @@ void CPU::requestNMI() {
 void CPU::handleNMI() {
     std::cerr << "[NMI Debug] NMI Triggered. Starting NMI handler..." << std::endl;
 
-    // Push the high and low bytes of the current PC onto the stack
-    pushToStack((PC >> 8) & 0xFF); // High byte of PC
-    pushToStack(PC & 0xFF);        // Low byte of PC
-    std::cerr << "[NMI Debug] PC Pushed: High = 0x" 
-              << std::hex << ((PC >> 8) & 0xFF) 
-              << ", Low = 0x" << (PC & 0xFF) << std::endl;
+    // Push the current PC to the stack (high byte first)
+    uint8_t highByte = (PC >> 8) & 0xFF;
+    uint8_t lowByte = PC & 0xFF;
 
-    // Prepare flags to push (clear Break flag and set Unused bit)
+    pushToStack(highByte);
+    pushToStack(lowByte);
+
+    std::cerr << "[NMI Debug] PC Pushed to Stack: High = 0x" 
+              << std::hex << static_cast<int>(highByte)
+              << ", Low = 0x" << static_cast<int>(lowByte) << std::endl;
+
+    // Push the status register with Break cleared and Unused set
     uint8_t flagsToPush = (P & ~0x10) | 0x20; // Clear Break flag, set Unused bit
-    std::cerr << "[NMI Debug] Flags to Push (Break Cleared, Unused Set): 0b" 
-              << std::bitset<8>(flagsToPush) << std::endl;
-
     pushToStack(flagsToPush);
 
-    // Set the Interrupt Disable flag
-    setFlag(I, true);
-    std::cerr << "[NMI Debug] Interrupt Disable Flag Set. New P: 0b" 
-              << std::bitset<8>(P) << std::endl;
+    std::cerr << "[NMI Debug] Status Register Pushed: 0b" 
+              << std::bitset<8>(flagsToPush) << std::endl;
 
-    // Load the NMI vector address (0xFFFA and 0xFFFB)
+    // Set Interrupt Disable flag (bit 2)
+    setFlag(I, true); // Prevent further interrupts during NMI handling
+    std::cerr << "[NMI Debug] Interrupt Disable Flag Set." << std::endl;
+
+    // Fetch NMI vector address from memory at 0xFFFA (low byte) and 0xFFFB (high byte)
     uint8_t vectorLow = memory[0xFFFA];
     uint8_t vectorHigh = memory[0xFFFB];
     PC = (vectorHigh << 8) | vectorLow;
 
     std::cerr << "[NMI Debug] NMI Vector Loaded: Low = 0x" 
               << std::hex << static_cast<int>(vectorLow)
-              << ", High = 0x" << static_cast<int>(vectorHigh) 
+              << ", High = 0x" << static_cast<int>(vectorHigh)
               << ", New PC = 0x" << PC << std::endl;
 
-    // Add the 7 cycles required for NMI handling
+    // Add NMI handling cycles (7 cycles for NMI as per NES specs)
     addCycles(7);
-    std::cerr << "[NMI Debug] NMI Handling Complete. Cycles Added: 7, Total Cycles = " 
-              << std::dec << cycles << std::endl;
+    std::cerr << "[NMI Debug] 7 Cycles Added for NMI Handling. Total Cycles: " 
+              << cycles << std::endl;
 }
+
+void CPU::debugNMIVector() {
+    uint8_t vectorLow = memory[0xFFFA];
+    uint8_t vectorHigh = memory[0xFFFB];
+    std::cerr << "[Debug] NMI Vector: Low = 0x" << std::hex 
+              << static_cast<int>(vectorLow) << ", High = 0x" 
+              << static_cast<int>(vectorHigh) 
+              << ", Full Address = 0x" << ((vectorHigh << 8) | vectorLow) << std::endl;
+}
+
+
 
 
 

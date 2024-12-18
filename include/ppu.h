@@ -37,6 +37,7 @@ public:
     public:
     uint8_t getFineXScroll() const { return fineXScroll; }
     uint8_t getFineYScroll() const { return fineYScroll; }
+    void clearVBlankFlag();
 
 
 private:

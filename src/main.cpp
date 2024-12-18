@@ -52,7 +52,16 @@ void loadROM(CPU& cpu, const std::string& filepath) {
     cpu.memory[0xFFFC] = 0x00; // Low byte of 0xC000
     cpu.memory[0xFFFD] = 0xC0; // High byte of 0xC000
 
-    // Debugging information
+    // Debugging: Verify if ROM writes 0x80 to PPUCTRL ($2000)
+    if (cpu.memory[0x2000] == 0x80) {
+        std::cerr << "[ROM Debug] ROM correctly enables NMI at $2000: 0x" 
+                  << std::hex << static_cast<int>(cpu.memory[0x2000]) << std::endl;
+    } else {
+        std::cerr << "[ROM Debug] ROM does not enable NMI at $2000. Value: 0x" 
+                  << std::hex << static_cast<int>(cpu.memory[0x2000]) << std::endl;
+    }
+
+    // Debugging: Print reset vector
     uint8_t resetLow = cpu.memory[0xFFFC];
     uint8_t resetHigh = cpu.memory[0xFFFD];
     uint16_t resetVector = resetLow | (resetHigh << 8);
@@ -61,8 +70,14 @@ void loadROM(CPU& cpu, const std::string& filepath) {
     std::cout << "PRG-ROM size: " << prgSize << " bytes" << std::endl;
     std::cout << "Reset vector set to: 0x" << std::hex << resetVector << std::endl;
 
+    cpu.memory[0x2000] = 0x80; // Force enable NMI in PPUCTRL (bit 7)
+    std::cerr << "[Debug] Manually setting NMI enable in PPUCTRL ($2000): 0x80" << std::endl;
     rom.close();
+
+    // Dump NMI vector for further debugging
+    cpu.debugNMIVector();
 }
+
 
 void displayFramebuffer(SDL_Renderer* renderer, SDL_Texture* texture, const PPU& ppu) {
     // Update the texture with the framebuffer data
@@ -131,7 +146,7 @@ int main() {
     ppu.reset();
 
     // Load ROM
-    const std::string romPath = "roms/super_mario_bros.nes";
+    const std::string romPath = "roms/hello_world.nes";
     loadROM(cpu, romPath);
 
     // Main emulation loop
@@ -148,6 +163,7 @@ int main() {
         // Execute CPU instructions and render PPU frame
         cpu.execute();
         ppu.renderFrame();
+        
 
         // Update the screen
         displayFramebuffer(renderer, texture, ppu);
