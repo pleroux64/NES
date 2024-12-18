@@ -134,10 +134,12 @@ void PPU::renderFrame()
     PPUSTATUS |= 0x80; // Set VBlank flag
     if (PPUCTRL & 0x80) { // NMI enabled
         if (cpu) {
+            std::cerr << "[PPU Debug] NMI Requested by PPU.\n";
             cpu->requestNMI();
         }
     }
 }
+
 
 void PPU::renderBackground()
 {
