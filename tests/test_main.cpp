@@ -176,40 +176,39 @@ TEST_CASE("PPU - NMI Trigger and CPU Communication") {
     CPU cpu;
     PPU ppu;
 
-    // Reset CPU and PPU
-    resetSystem(ppu, cpu);
+    // Reset both CPU and PPU
+    cpu.reset();
+    ppu.reset();
+    ppu.setCPU(&cpu); // Link PPU to CPU
 
     // Set the NMI vector to 0x8000
-    cpu.memory[0xFFFA] = 0x00; // Low byte of NMI vector
-    cpu.memory[0xFFFB] = 0x80; // High byte of NMI vector
-
-    // Set CPU initial state
-    cpu.PC = 0x1234;
-    cpu.P = 0b10100101; // Status register
-    cpu.SP = 0xFF;
-
-    uint8_t initialSP = cpu.SP;
+    cpu.memory[0xFFFA] = 0x00; // Low byte
+    cpu.memory[0xFFFB] = 0x80; // High byte
 
     // Enable NMI in PPUCTRL
-    ppu.writeRegister(0x2000, 0x80);
+    ppu.writeRegister(0x2000, 0x80); // Set NMI enable bit
 
-    // Trigger a frame render, which requests NMI
+    // Initialize CPU state
+    cpu.PC = 0x1234;           // Example program counter
+    cpu.P = 0b10100101;        // Status register
+    uint8_t initialSP = cpu.SP; // Save initial SP
+
+    // Render a frame (triggers VBlank and NMI)
     ppu.renderFrame();
-
-    // Execute CPU to handle the NMI
     cpu.execute();
 
-    // Verify stack content
-    CHECK(cpu.memory[0x0100 + ((initialSP) & 0xFF)] == (0b10100101 & ~0x10)); // Flags with Break cleared
-    CHECK(cpu.memory[0x0100 + ((initialSP - 1) & 0xFF)] == 0x34); // Low byte of PC
-    CHECK(cpu.memory[0x0100 + ((initialSP - 2) & 0xFF)] == 0x12); // High byte of PC
+    // Check values pushed to the stack
+    CHECK(cpu.memory[0x0100 + (initialSP - 0)] == 0x12); // High byte of PC
+    CHECK(cpu.memory[0x0100 + (initialSP - 1)] == 0x34); // Low byte of PC
+    CHECK(cpu.memory[0x0100 + (initialSP - 2)] == ((cpu.P & ~0x10) | 0x20)); // Flags with B cleared, Unused set
 
     // Verify SP decremented by 3
     CHECK(cpu.SP == static_cast<uint8_t>(initialSP - 3));
 
-    // Verify PC updated to NMI vector (0x8000)
+    // Verify PC is updated to the NMI vector (0x8000)
     CHECK(cpu.PC == 0x8000);
 
-    std::cerr << "[Debug] SP After NMI: 0x" << std::hex << static_cast<int>(cpu.SP) << "\n";
-    std::cerr << "[Debug] PC After NMI: 0x" << std::hex << cpu.PC << "\n";
+    // Debug logs
+    std::cerr << "[Debug] SP After NMI: 0x" << std::hex << static_cast<int>(cpu.SP) << std::endl;
+    std::cerr << "[Debug] PC After NMI: 0x" << std::hex << cpu.PC << std::endl;
 }
