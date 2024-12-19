@@ -1,4 +1,5 @@
 #include "cpu.h"
+#include "ppu.h" 
 #include "opcode_cycles.h"
 #include "cycle_exceptions.h"
 
@@ -7,12 +8,13 @@
 
 
 
+
 // Reset the CPU to its initial state
 void CPU::reset()
 {
     // Fetch the RESET vector from memory
-    uint8_t resetLow = memory[0xFFFC];  // Low byte
-    uint8_t resetHigh = memory[0xFFFD]; // High byte
+    uint8_t resetLow = readMemory(0xFFFC);  // Low byte
+    uint8_t resetHigh = readMemory(0xFFFD); // High byte
 
     // Combine the two bytes to form the address
     PC = (resetHigh << 8) | resetLow;
@@ -43,13 +45,13 @@ void CPU::loadROM(const std::string &filename)
 // Fetch the next byte and increment the program counter
 uint8_t CPU::fetchByte()
 {
-    return memory[PC++];
+    return readMemory(PC++);
 }
 
 // Fetch the next two bytes as a 16-bit word
 uint16_t CPU::fetchWord()
 {
-    uint16_t word = memory[PC] | (memory[PC + 1] << 8);
+    uint16_t word = readMemory(PC) | (readMemory(PC + 1) << 8);
     PC += 2;
     return word;
 }
@@ -135,8 +137,8 @@ void CPU::handleNMI() {
     std::cerr << "[NMI Debug] Interrupt Disable Flag Set." << std::endl;
 
     // Fetch NMI vector address from memory at 0xFFFA (low byte) and 0xFFFB (high byte)
-    uint8_t vectorLow = memory[0xFFFA];
-    uint8_t vectorHigh = memory[0xFFFB];
+    uint8_t vectorLow = readMemory(0xFFFA);
+    uint8_t vectorHigh = readMemory(0xFFFB);
     PC = (vectorHigh << 8) | vectorLow;
 
     std::cerr << "[NMI Debug] NMI Vector Loaded: Low = 0x" 
@@ -158,6 +160,45 @@ void CPU::debugNMIVector() {
               << static_cast<int>(vectorHigh) 
               << ", Full Address = 0x" << ((vectorHigh << 8) | vectorLow) << std::endl;
 }
+
+
+uint8_t CPU::readMemory(uint16_t address) {
+    if (address >= 0x2000 && address <= 0x3FFF) {
+        uint16_t ppuAddress = 0x2000 + (address % 8);
+        if (ppu) {
+            uint8_t value = ppu->readRegister(ppuAddress);
+            std::cerr << "[CPU Debug] Read from PPU register 0x" << std::hex << ppuAddress
+                      << " returning value 0x" << static_cast<int>(value) << ".\n";
+            return value;
+        }
+        std::cerr << "[CPU Debug] Attempted PPU read with no linked PPU.\n";
+        return 0; // Return 0 as a placeholder
+    }
+    // Return general memory value
+    return memory[address];
+}
+
+void CPU::writeMemory(uint16_t address, uint8_t value) {
+    if (address >= 0x2000 && address <= 0x3FFF) {
+        // PPU registers are mirrored every 8 bytes in this range
+        uint16_t ppuAddress = 0x2000 + (address % 8);
+        if (ppu) {
+            ppu->writeRegister(ppuAddress, value);
+            return; // Handled by PPU
+        }
+        std::cerr << "[CPU Debug] Attempted PPU write with no linked PPU.\n";
+        return;
+    }
+
+    // Handle general RAM or other I/O
+    memory[address] = value;
+}
+
+
+void CPU::setPPU(PPU* ppuInstance) {
+    ppu = ppuInstance;
+}
+
 
 
 

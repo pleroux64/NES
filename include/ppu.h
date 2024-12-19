@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <array>
 
-class CPU; // Forward declaration to avoid circular dependency
+class CPU; 
 
 class PPU {
 public:

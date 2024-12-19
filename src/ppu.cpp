@@ -108,6 +108,8 @@ uint8_t PPU::readRegister(uint16_t address)
         PPUSTATUS &= 0x7F;    // Clear VBlank flag (bit 7)
         addressLatch = false; // Reset latches
         scrollLatch = false;
+        std::cerr << "[PPU Debug] $2002 Read: VBlank = "
+                  << ((data & 0x80) ? "Set" : "Clear") << std::endl;
         break;
 
     case 0x2004: // OAMDATA

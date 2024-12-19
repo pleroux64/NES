@@ -7,7 +7,11 @@
 #include <unordered_map>
 #include <string>
 
+
+
 class CPU;
+class PPU;
+
 
 
 // Forward declarations for opcode initialization
@@ -71,6 +75,9 @@ public:
     void requestNMI();
     void handleNMI();
     void debugNMIVector();
+    void writeMemory(uint16_t address, uint8_t value);
+    uint8_t readMemory(uint16_t address);
+    void setPPU(PPU* ppuInstance);
 
     // Opcode Table
     using OpcodeFunction = std::function<void(CPU&)>;
@@ -159,6 +166,9 @@ public:
 
     void debugStack();
     void addCycles(int cycles);
+
+private:
+ PPU* ppu = nullptr;
 
 
 };
