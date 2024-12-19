@@ -10,7 +10,15 @@
 // Reset the CPU to its initial state
 void CPU::reset()
 {
-    PC = 0x8000; // Typical starting address for NES
+    // Fetch the RESET vector from memory
+    uint8_t resetLow = memory[0xFFFC];  // Low byte
+    uint8_t resetHigh = memory[0xFFFD]; // High byte
+
+    // Combine the two bytes to form the address
+    PC = (resetHigh << 8) | resetLow;
+
+    // Debugging log for verification
+    std::cerr << "[CPU Debug] PC set to RESET vector: 0x" << std::hex << PC << std::endl;
     SP = 0xFF;
     A = X = Y = P = 0;
     initializeOpcodeTable(); // Ensure opcode table is initialized
