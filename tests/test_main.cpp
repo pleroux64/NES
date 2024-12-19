@@ -212,3 +212,45 @@ TEST_CASE("PPU - NMI Trigger and CPU Communication") {
     std::cerr << "[Debug] SP After NMI: 0x" << std::hex << static_cast<int>(cpu.SP) << std::endl;
     std::cerr << "[Debug] PC After NMI: 0x" << std::hex << cpu.PC << std::endl;
 }
+
+
+TEST_CASE("PPU - NMI Trigger and CPU Communication2") {
+    CPU cpu;
+    PPU ppu;
+
+    // Link PPU to CPU
+    cpu.reset();
+    ppu.reset();
+    ppu.setCPU(&cpu);
+
+    // Set the NMI vector to 0x8000 in memory
+    cpu.memory[0xFFFA] = 0x00; // Low byte
+    cpu.memory[0xFFFB] = 0x80; // High byte
+
+    // Enable NMI in PPUCTRL
+    ppu.writeRegister(0x2000, 0x80); // Set NMI enable flag
+
+    // Initialize CPU state
+    cpu.PC = 0x1234;           // Arbitrary program counter
+    cpu.P = 0b10100101;        // Status register
+    uint8_t initialSP = cpu.SP; // Save initial stack pointer
+
+    // Simulate rendering a frame, which sets VBlank and triggers NMI
+    ppu.renderFrame();
+    cpu.execute(); // Execute CPU cycle to handle the NMI
+
+    // Verify stack values
+    CHECK(cpu.memory[0x0100 + initialSP - 0] == 0x12); // High byte of PC
+    CHECK(cpu.memory[0x0100 + initialSP - 1] == 0x34); // Low byte of PC
+    CHECK(cpu.memory[0x0100 + initialSP - 2] == ((cpu.P & ~0x10) | 0x20)); // Status register
+
+    // Verify SP decrement
+    CHECK(cpu.SP == static_cast<uint8_t>(initialSP - 3));
+
+    // Verify PC is updated to the NMI vector (0x8000)
+    CHECK(cpu.PC == 0x8000);
+
+    // Debug output
+    std::cerr << "[Test Debug] Stack Pointer After NMI: 0x" << std::hex << static_cast<int>(cpu.SP) << std::endl;
+    std::cerr << "[Test Debug] Program Counter After NMI: 0x" << std::hex << cpu.PC << std::endl;
+}

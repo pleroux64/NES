@@ -160,7 +160,7 @@ int main()
     }
 
     // Load ROM
-    const std::string romPath = "roms/super_mario_bros.nes";
+    const std::string romPath = "roms/hello_world.nes";
     loadROM(cpu, romPath);
 
     // Reset CPU and PPU
