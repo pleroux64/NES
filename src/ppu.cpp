@@ -40,8 +40,9 @@ void PPU::writeRegister(uint16_t address, uint8_t value)
     switch (address)
     {
     case 0x2000: // PPUCTRL
+        std::cerr << "[PPU Debug] Old PPUCTRL: 0x" << std::hex << static_cast<int>(PPUCTRL) << std::endl;
         PPUCTRL = value;
-        std::cerr << "[PPU Debug] PPUCTRL written: 0b" << std::bitset<8>(PPUCTRL)
+        std::cerr << "[PPU Debug] New PPUCTRL written: 0x" << std::hex << static_cast<int>(PPUCTRL)
                   << " (NMI enabled: " << ((PPUCTRL & 0x80) != 0) << ")" << std::endl;
         break;
 
@@ -135,7 +136,7 @@ void PPU::renderFrame()
 
     // Set VBlank flag in PPUSTATUS (bit 7)
     PPUSTATUS |= 0x80; // Indicates the start of VBlank
-    std::cerr << "[PPU Debug] VBlank flag set. PPUSTATUS: 0b" 
+    std::cerr << "[PPU Debug] VBlank flag set. PPUSTATUS: 0b"
               << std::bitset<8>(PPUSTATUS) << std::endl;
 
     // Check if NMI is enabled in PPUCTRL (bit 7)
