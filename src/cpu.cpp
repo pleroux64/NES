@@ -188,11 +188,11 @@ uint8_t CPU::readMemory(uint16_t address)
 
 void CPU::writeMemory(uint16_t address, uint8_t value)
 {
-    std::cerr << "[CPU Debug] Attempting to write to memory address: 0x" 
-              << std::hex << address 
-              << " with value: 0x" 
-              << static_cast<int>(value) 
-              << std::endl;
+    // std::cerr << "[CPU Debug] Attempting to write to memory address: 0x" 
+    //           << std::hex << address 
+    //           << " with value: 0x" 
+    //           << static_cast<int>(value) 
+    //           << std::endl;
 
     if (address >= 0x2000 && address <= 0x3FFF)
     {
@@ -213,11 +213,11 @@ void CPU::writeMemory(uint16_t address, uint8_t value)
     }
 
     // Handle general RAM or other I/O
-    std::cerr << "[CPU Debug] Writing to general memory: Address = 0x" 
-              << std::hex << address 
-              << ", Value = 0x" 
-              << static_cast<int>(value) 
-              << std::endl;
+    // std::cerr << "[CPU Debug] Writing to general memory: Address = 0x" 
+    //           << std::hex << address 
+    //           << ", Value = 0x" 
+    //           << static_cast<int>(value) 
+    //           << std::endl;
 
     memory[address] = value;
 }

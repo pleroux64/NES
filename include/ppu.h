@@ -38,6 +38,8 @@ public:
     uint8_t getFineXScroll() const { return fineXScroll; }
     uint8_t getFineYScroll() const { return fineYScroll; }
     void clearVBlankFlag();
+    uint16_t resolveNametableAddress(uint16_t address);
+    void debugPatternTable();
 
 
 private:

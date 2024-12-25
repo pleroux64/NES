@@ -9,7 +9,7 @@ const int SCREEN_WIDTH = 256;      // NES screen width
 const int SCREEN_HEIGHT = 240;     // NES screen height
 const int FRAME_DELAY = 1000 / 60; // ~60 FPS delay
 
-void loadROM(CPU &cpu, const std::string &filepath)
+void loadROM(CPU &cpu, PPU &ppu, const std::string &filepath)
 {
     std::ifstream rom(filepath, std::ios::binary);
     if (!rom.is_open())
@@ -32,7 +32,7 @@ void loadROM(CPU &cpu, const std::string &filepath)
     // Get PRG-ROM size (in 16KB units)
     int prgSize = header[4] * 16384; // PRG-ROM size in bytes
     if (prgSize > 0x8000)
-    { // Maximum size for PRG-ROM in NES memory
+    {
         std::cerr << "PRG-ROM size exceeds memory limit!" << std::endl;
         exit(1);
     }
@@ -48,11 +48,29 @@ void loadROM(CPU &cpu, const std::string &filepath)
 
     // Mirror PRG-ROM for smaller sizes
     if (prgSize == 0x4000)
-    { // If the PRG-ROM is 16KB, mirror it to 0xC000
+    {
         for (size_t i = 0; i < 0x4000; ++i)
         {
             cpu.writeMemory(0xC000 + i, cpu.readMemory(0x8000 + i));
         }
+    }
+
+    // Load CHR-ROM into PPU memory (if available)
+    int chrSize = header[5] * 8192; // CHR-ROM size in 8KB units
+    if (chrSize > 0)
+    {
+        rom.read(reinterpret_cast<char *>(&ppu.memory[0x0000]), chrSize);
+        if (!rom)
+        {
+            std::cerr << "Error reading CHR-ROM" << std::endl;
+            exit(1);
+        }
+    }
+    else
+    {
+        // Handle CHR-RAM if no CHR-ROM is present
+        std::cerr << "[Debug] CHR-ROM size is 0. Assuming CHR-RAM." << std::endl;
+        std::fill(ppu.memory.begin(), ppu.memory.begin() + 0x2000, 0); // Initialize 8KB CHR-RAM
     }
 
     // Calculate offset for the last 6 bytes of PRG-ROM
@@ -72,15 +90,9 @@ void loadROM(CPU &cpu, const std::string &filepath)
     cpu.writeMemory(0xFFFF, vectorBytes[5]); // IRQ/BRK Vector High
 
     // Fetch vectors for debugging
-    uint16_t nmiVector = (cpu.readMemory(0xFFFB)
-                          << 8) |
-                         cpu.readMemory(0xFFFA);
-    uint16_t resetVector = (cpu.readMemory(0xFFFD)
-                            << 8) |
-                           cpu.readMemory(0xFFFC);
-    uint16_t irqVector = (cpu.readMemory(0xFFFF)
-                          << 8) |
-                         cpu.readMemory(0xFFFE);
+    uint16_t nmiVector = (cpu.readMemory(0xFFFB) << 8) | cpu.readMemory(0xFFFA);
+    uint16_t resetVector = (cpu.readMemory(0xFFFD) << 8) | cpu.readMemory(0xFFFC);
+    uint16_t irqVector = (cpu.readMemory(0xFFFF) << 8) | cpu.readMemory(0xFFFE);
 
     // Debugging: Print vectors
     std::cout << "[Debug] Fetched NMI vector: 0x" << std::hex << nmiVector << std::endl;
@@ -94,7 +106,9 @@ void loadROM(CPU &cpu, const std::string &filepath)
 
     // Dump NMI vector for further debugging
     cpu.debugNMIVector();
+    //ppu.debugPatternTable();
 }
+
 
 void displayFramebuffer(SDL_Renderer *renderer, SDL_Texture *texture, const PPU &ppu)
 {
@@ -137,8 +151,12 @@ int main()
         return 1;
     }
 
+    // Scale the window dimensions
+    const int WINDOW_WIDTH = SCREEN_WIDTH * 3;
+    const int WINDOW_HEIGHT = SCREEN_HEIGHT * 3;
+
     SDL_Window *window = SDL_CreateWindow("NES Emulator", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-                                          SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
+                                          WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_SHOWN);
     if (!window)
     {
         std::cerr << "Failed to create SDL window: " << SDL_GetError() << std::endl;
@@ -168,7 +186,7 @@ int main()
 
     // Load ROM
     const std::string romPath = "roms/hello_world.nes";
-    loadROM(cpu, romPath);
+    loadROM(cpu,ppu,romPath);
 
     // Reset CPU and PPU
     cpu.reset();
