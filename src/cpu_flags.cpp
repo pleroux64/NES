@@ -36,10 +36,10 @@ void initializeFlagsOpcodes(std::unordered_map<uint8_t, std::function<void(CPU &
 // ===== SEI Instructions =====
 #pragma region SEI Opcodes
 
-opcodeTable[0x78] = [](CPU &cpu) { // SEI - Set Interrupt Disable
-    std::cout << "Executing SEI: Setting Interrupt Disable Flag (I)" << std::endl;
-    cpu.setFlag(CPU::I, true); // Set the Interrupt Disable flag (I) to 1
-};
+    opcodeTable[0x78] = [](CPU &cpu) { // SEI - Set Interrupt Disable
+        std::cout << "Executing SEI: Setting Interrupt Disable Flag (I)" << std::endl;
+        cpu.setFlag(CPU::I, true); // Set the Interrupt Disable flag (I) to 1
+    };
 
 #pragma endregion
 
@@ -56,10 +56,10 @@ opcodeTable[0x78] = [](CPU &cpu) { // SEI - Set Interrupt Disable
 // ===== CED Instructions =====
 #pragma region CED Opcodes
 
-opcodeTable[0xF8] = [](CPU &cpu) { // SED - Set Decimal
-    std::cout << "Executing SED: Setting Decimal Flag (D)" << std::endl;
-    cpu.setFlag(CPU::D, true); // Set the Decimal flag (D) to 1
-};
+    opcodeTable[0xF8] = [](CPU &cpu) { // SED - Set Decimal
+        std::cout << "Executing SED: Setting Decimal Flag (D)" << std::endl;
+        cpu.setFlag(CPU::D, true); // Set the Decimal flag (D) to 1
+    };
 
 #pragma endregion
 

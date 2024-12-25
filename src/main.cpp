@@ -51,11 +51,11 @@ void loadROM(CPU &cpu, const std::string &filepath)
     { // If the PRG-ROM is 16KB, mirror it to 0xC000
         for (size_t i = 0; i < 0x4000; ++i)
         {
-            cpu.memory[0xC000 + i] = cpu.memory[0x8000 + i];
+            cpu.writeMemory(0xC000 + i, cpu.readMemory(0x8000 + i));
         }
     }
 
-   // Calculate offset for the last 6 bytes of PRG-ROM
+    // Calculate offset for the last 6 bytes of PRG-ROM
     int vectorOffset = 16 + prgSize - 6; // 16 bytes for header
     rom.seekg(vectorOffset, std::ios::beg);
 
@@ -64,17 +64,23 @@ void loadROM(CPU &cpu, const std::string &filepath)
     rom.read(reinterpret_cast<char *>(vectorBytes), 6);
 
     // Assign the vectors to the correct memory locations
-    cpu.memory[0xFFFA] = vectorBytes[0]; // NMI Vector Low
-    cpu.memory[0xFFFB] = vectorBytes[1]; // NMI Vector High
-    cpu.memory[0xFFFC] = vectorBytes[2]; // RESET Vector Low
-    cpu.memory[0xFFFD] = vectorBytes[3]; // RESET Vector High
-    cpu.memory[0xFFFE] = vectorBytes[4]; // IRQ/BRK Vector Low
-    cpu.memory[0xFFFF] = vectorBytes[5]; // IRQ/BRK Vector High
+    cpu.writeMemory(0xFFFA, vectorBytes[0]); // NMI Vector Low
+    cpu.writeMemory(0xFFFB, vectorBytes[1]); // NMI Vector High
+    cpu.writeMemory(0xFFFC, vectorBytes[2]); // RESET Vector Low
+    cpu.writeMemory(0xFFFD, vectorBytes[3]); // RESET Vector High
+    cpu.writeMemory(0xFFFE, vectorBytes[4]); // IRQ/BRK Vector Low
+    cpu.writeMemory(0xFFFF, vectorBytes[5]); // IRQ/BRK Vector High
 
     // Fetch vectors for debugging
-    uint16_t nmiVector = (cpu.memory[0xFFFB] << 8) | cpu.memory[0xFFFA];
-    uint16_t resetVector = (cpu.memory[0xFFFD] << 8) | cpu.memory[0xFFFC];
-    uint16_t irqVector = (cpu.memory[0xFFFF] << 8) | cpu.memory[0xFFFE];
+    uint16_t nmiVector = (cpu.readMemory(0xFFFB)
+                          << 8) |
+                         cpu.readMemory(0xFFFA);
+    uint16_t resetVector = (cpu.readMemory(0xFFFD)
+                            << 8) |
+                           cpu.readMemory(0xFFFC);
+    uint16_t irqVector = (cpu.readMemory(0xFFFF)
+                          << 8) |
+                         cpu.readMemory(0xFFFE);
 
     // Debugging: Print vectors
     std::cout << "[Debug] Fetched NMI vector: 0x" << std::hex << nmiVector << std::endl;
@@ -121,6 +127,7 @@ int main()
     PPU ppu;
 
     // Link the PPU to the CPU
+    cpu.setPPU(&ppu);
     ppu.setCPU(&cpu);
 
     // SDL Initialization with error checking
@@ -177,7 +184,7 @@ int main()
 
         // Poll controller input
         controller.pollKeyboard();
-        cpu.memory[0x4016] = controller.getButtonState();
+        cpu.writeMemory(0x4016, controller.getButtonState());
 
         // Execute CPU instructions and render PPU frame
         cpu.execute();

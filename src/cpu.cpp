@@ -1,13 +1,10 @@
 #include "cpu.h"
-#include "ppu.h" 
+#include "ppu.h"
 #include "opcode_cycles.h"
 #include "cycle_exceptions.h"
 
 #include <iostream>
 #include <fstream>
-
-
-
 
 // Reset the CPU to its initial state
 void CPU::reset()
@@ -25,7 +22,6 @@ void CPU::reset()
     A = X = Y = P = 0;
     initializeOpcodeTable(); // Ensure opcode table is initialized
     cycles = 0;
-
 }
 // Load a ROM into memory starting at address 0x8000
 void CPU::loadROM(const std::string &filename)
@@ -66,7 +62,8 @@ void CPU::setFlag(uint8_t flag, bool value)
 }
 
 // Get the value of a status flag in the P register
-bool CPU::getFlag(uint8_t flag) {
+bool CPU::getFlag(uint8_t flag)
+{
     bool result = (P & (1 << flag)) != 0;
     std::cerr << "[Debug] getFlag(" << static_cast<int>(flag)
               << "): P = " << std::bitset<8>(P)
@@ -78,40 +75,48 @@ bool CPU::getFlag(uint8_t flag) {
     return result;
 }
 
-void CPU::printMemory(uint16_t start, uint16_t end) {
-    for (uint16_t addr = start; addr <= end; ++addr) {
+void CPU::printMemory(uint16_t start, uint16_t end)
+{
+    for (uint16_t addr = start; addr <= end; ++addr)
+    {
         std::cout << "Memory[0x" << std::hex << addr << "] = 0x"
                   << std::hex << static_cast<int>(memory[addr]) << std::endl;
     }
 }
 
-void CPU::dumpMemoryToConsole(uint16_t start, uint16_t end) {
-    for (uint16_t addr = start; addr <= end; addr++) {
-        std::cout << "Memory[0x" << std::hex << addr << "] = 0x" 
+void CPU::dumpMemoryToConsole(uint16_t start, uint16_t end)
+{
+    for (uint16_t addr = start; addr <= end; addr++)
+    {
+        std::cout << "Memory[0x" << std::hex << addr << "] = 0x"
                   << std::hex << (int)memory[addr] << std::endl;
     }
 }
 
-void CPU::handleUndefinedOpcode(uint8_t opcode) {
-    std::cerr << "[Error] Undefined opcode encountered: 0x" 
+void CPU::handleUndefinedOpcode(uint8_t opcode)
+{
+    std::cerr << "[Error] Undefined opcode encountered: 0x"
               << std::hex << static_cast<int>(opcode) << " at PC: 0x"
               << std::hex << PC << std::endl;
 
     // Skip the undefined opcode
-    PC++; 
+    PC++;
 
     // Add optional logging or error handling here, if needed
 }
 
-void CPU::addCycles(int cycles) {
+void CPU::addCycles(int cycles)
+{
     this->cycles += cycles;
 }
 
-void CPU::requestNMI() {
+void CPU::requestNMI()
+{
     nmiRequested = true;
 }
 
-void CPU::handleNMI() {
+void CPU::handleNMI()
+{
     std::cerr << "[NMI Debug] NMI Triggered. Starting NMI handler..." << std::endl;
 
     // Push the current PC to the stack (high byte first)
@@ -121,7 +126,7 @@ void CPU::handleNMI() {
     pushToStack(highByte);
     pushToStack(lowByte);
 
-    std::cerr << "[NMI Debug] PC Pushed to Stack: High = 0x" 
+    std::cerr << "[NMI Debug] PC Pushed to Stack: High = 0x"
               << std::hex << static_cast<int>(highByte)
               << ", Low = 0x" << static_cast<int>(lowByte) << std::endl;
 
@@ -129,7 +134,7 @@ void CPU::handleNMI() {
     uint8_t flagsToPush = (P & ~0x10) | 0x20; // Clear Break flag, set Unused bit
     pushToStack(flagsToPush);
 
-    std::cerr << "[NMI Debug] Status Register Pushed: 0b" 
+    std::cerr << "[NMI Debug] Status Register Pushed: 0b"
               << std::bitset<8>(flagsToPush) << std::endl;
 
     // Set Interrupt Disable flag (bit 2)
@@ -141,31 +146,34 @@ void CPU::handleNMI() {
     uint8_t vectorHigh = readMemory(0xFFFB);
     PC = (vectorHigh << 8) | vectorLow;
 
-    std::cerr << "[NMI Debug] NMI Vector Loaded: Low = 0x" 
+    std::cerr << "[NMI Debug] NMI Vector Loaded: Low = 0x"
               << std::hex << static_cast<int>(vectorLow)
               << ", High = 0x" << static_cast<int>(vectorHigh)
               << ", New PC = 0x" << PC << std::endl;
 
     // Add NMI handling cycles (7 cycles for NMI as per NES specs)
     addCycles(7);
-    std::cerr << "[NMI Debug] 7 Cycles Added for NMI Handling. Total Cycles: " 
+    std::cerr << "[NMI Debug] 7 Cycles Added for NMI Handling. Total Cycles: "
               << cycles << std::endl;
 }
 
-void CPU::debugNMIVector() {
+void CPU::debugNMIVector()
+{
     uint8_t vectorLow = memory[0xFFFA];
     uint8_t vectorHigh = memory[0xFFFB];
-    std::cerr << "[Debug] NMI Vector: Low = 0x" << std::hex 
-              << static_cast<int>(vectorLow) << ", High = 0x" 
-              << static_cast<int>(vectorHigh) 
+    std::cerr << "[Debug] NMI Vector: Low = 0x" << std::hex
+              << static_cast<int>(vectorLow) << ", High = 0x"
+              << static_cast<int>(vectorHigh)
               << ", Full Address = 0x" << ((vectorHigh << 8) | vectorLow) << std::endl;
 }
 
-
-uint8_t CPU::readMemory(uint16_t address) {
-    if (address >= 0x2000 && address <= 0x3FFF) {
+uint8_t CPU::readMemory(uint16_t address)
+{
+    if (address >= 0x2000 && address <= 0x3FFF)
+    {
         uint16_t ppuAddress = 0x2000 + (address % 8);
-        if (ppu) {
+        if (ppu)
+        {
             uint8_t value = ppu->readRegister(ppuAddress);
             std::cerr << "[CPU Debug] Read from PPU register 0x" << std::hex << ppuAddress
                       << " returning value 0x" << static_cast<int>(value) << ".\n";
@@ -178,11 +186,25 @@ uint8_t CPU::readMemory(uint16_t address) {
     return memory[address];
 }
 
-void CPU::writeMemory(uint16_t address, uint8_t value) {
-    if (address >= 0x2000 && address <= 0x3FFF) {
+void CPU::writeMemory(uint16_t address, uint8_t value)
+{
+    std::cerr << "[CPU Debug] Attempting to write to memory address: 0x" 
+              << std::hex << address 
+              << " with value: 0x" 
+              << static_cast<int>(value) 
+              << std::endl;
+
+    if (address >= 0x2000 && address <= 0x3FFF)
+    {
         // PPU registers are mirrored every 8 bytes in this range
         uint16_t ppuAddress = 0x2000 + (address % 8);
-        if (ppu) {
+        std::cerr << "[CPU Debug] Address mapped to PPU register: 0x" 
+                  << std::hex << ppuAddress 
+                  << std::endl;
+
+        if (ppu)
+        {
+            std::cerr << "[CPU Debug] Writing value to PPU.\n";
             ppu->writeRegister(ppuAddress, value);
             return; // Handled by PPU
         }
@@ -191,22 +213,25 @@ void CPU::writeMemory(uint16_t address, uint8_t value) {
     }
 
     // Handle general RAM or other I/O
+    std::cerr << "[CPU Debug] Writing to general memory: Address = 0x" 
+              << std::hex << address 
+              << ", Value = 0x" 
+              << static_cast<int>(value) 
+              << std::endl;
+
     memory[address] = value;
 }
 
 
-void CPU::setPPU(PPU* ppuInstance) {
+void CPU::setPPU(PPU *ppuInstance)
+{
     ppu = ppuInstance;
 }
 
-
-
-
-
-
-
-std::function<void(CPU&)> withBaseCycles(uint8_t opcode, int baseCycles, std::function<void(CPU&)> handler) {
-    return [opcode, baseCycles, handler](CPU& cpu) {
+std::function<void(CPU &)> withBaseCycles(uint8_t opcode, int baseCycles, std::function<void(CPU &)> handler)
+{
+    return [opcode, baseCycles, handler](CPU &cpu)
+    {
         // Add base cycles
         cpu.addCycles(baseCycles);
         // Execute the original handler
@@ -219,47 +244,50 @@ std::function<void(CPU&)> withBaseCycles(uint8_t opcode, int baseCycles, std::fu
     };
 }
 
-void addCycleLogic(std::unordered_map<uint8_t, std::function<void(CPU&)>>& opcodeTable,
-                   const std::unordered_map<uint8_t, int>& opcodeCycles,
-                   const std::unordered_map<uint8_t, std::function<int(CPU&)>>& cycleExceptions) {
-    for (const auto& [opcode, baseCycles] : opcodeCycles) {
+void addCycleLogic(std::unordered_map<uint8_t, std::function<void(CPU &)>> &opcodeTable,
+                   const std::unordered_map<uint8_t, int> &opcodeCycles,
+                   const std::unordered_map<uint8_t, std::function<int(CPU &)>> &cycleExceptions)
+{
+    for (const auto &[opcode, baseCycles] : opcodeCycles)
+    {
         const uint8_t capturedOpcode = opcode;
         const int capturedBaseCycles = baseCycles;
 
-        if (opcodeTable.count(opcode)) {
+        if (opcodeTable.count(opcode))
+        {
             auto originalHandler = opcodeTable[opcode];
 
             // Wrap the handler with cycle logic
-            opcodeTable[opcode] = [capturedOpcode, capturedBaseCycles, originalHandler, &cycleExceptions](CPU& cpu) {
+            opcodeTable[opcode] = [capturedOpcode, capturedBaseCycles, originalHandler, &cycleExceptions](CPU &cpu)
+            {
                 cpu.addCycles(capturedBaseCycles); // Add base cycles
                 originalHandler(cpu);              // Call the original handler logic
 
                 // Dynamically find the exception handler
                 auto exceptionIt = cycleExceptions.find(capturedOpcode);
-                if (exceptionIt != cycleExceptions.end()) {
+                if (exceptionIt != cycleExceptions.end())
+                {
                     int extraCycles = exceptionIt->second(cpu); // Call the exception handler
-                    cpu.addCycles(extraCycles);                // Add the extra cycles
+                    cpu.addCycles(extraCycles);                 // Add the extra cycles
                 }
             };
-        } else {
+        }
+        else
+        {
             std::cerr << "Warning: No handler defined for opcode 0x"
                       << std::hex << static_cast<int>(opcode) << '\n';
         }
     }
 }
 
-
-
-
-
-
 // Execute a single instruction
 void CPU::execute()
 {
-    if (nmiRequested) {
+    if (nmiRequested)
+    {
         handleNMI();
         nmiRequested = false; // Clear the signal after handling
-        return; // Prevent further opcode execution this cycle
+        return;               // Prevent further opcode execution this cycle
     }
 
     uint8_t opcode = fetchByte();
@@ -272,7 +300,6 @@ void CPU::execute()
         std::cerr << "Unknown opcode: 0x" << std::hex << (int)opcode << std::dec << std::endl;
     }
 }
-
 
 // Initialize the opcode table
 void CPU::initializeOpcodeTable()
@@ -290,6 +317,4 @@ void CPU::initializeOpcodeTable()
     initializeFlagsOpcodes(opcodeTable);
 
     addCycleLogic(opcodeTable, opcodeCycles, cycleExceptions);
-
-
 }

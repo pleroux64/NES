@@ -45,36 +45,36 @@ void initializeShiftOpcodes(std::unordered_map<uint8_t, std::function<void(CPU &
     opcodeTable[0x06] = [](CPU &cpu)
     {
         uint8_t address = cpu.fetchByte();
-        uint8_t value = cpu.memory[address];
+        uint8_t value = cpu.readMemory(address);
         cpu.performASL(value);
-        cpu.memory[address] = value;
+        cpu.writeMemory(address, value);
     };
 
     // ASL Zero Page, X (opcode 0x16)
     opcodeTable[0x16] = [](CPU &cpu)
     {
         uint8_t address = cpu.fetchByte();
-        uint8_t value = cpu.memory[(address + cpu.X) & 0xFF];
+        uint8_t value = cpu.readMemory((address + cpu.X) & 0xFF);
         cpu.performASL(value);
-        cpu.memory[(address + cpu.X) & 0xFF] = value;
+        cpu.writeMemory((address + cpu.X) & 0xFF, value);
     };
 
     // ASL Absolute (opcode 0x0E)
     opcodeTable[0x0E] = [](CPU &cpu)
     {
         uint16_t address = cpu.fetchWord();
-        uint8_t value = cpu.memory[address];
+        uint8_t value = cpu.readMemory(address);
         cpu.performASL(value);
-        cpu.memory[address] = value;
+        cpu.writeMemory(address, value);
     };
 
     // ASL Absolute, X (opcode 0x1E)
     opcodeTable[0x1E] = [](CPU &cpu)
     {
         uint16_t address = cpu.fetchWord();
-        uint8_t value = cpu.memory[(address + cpu.X) & 0xFFFF];
+        uint8_t value = cpu.readMemory((address + cpu.X) & 0xFFFF);
         cpu.performASL(value);
-        cpu.memory[(address + cpu.X) & 0xFFFF] = value;
+        cpu.writeMemory((address + cpu.X) & 0xFFFF, value);
     };
 #pragma endregion
 
@@ -129,7 +129,7 @@ void initializeShiftOpcodes(std::unordered_map<uint8_t, std::function<void(CPU &
 
     opcodeTable[0x26] = [](CPU &cpu) { // ROL - Zero Page
         uint8_t addr = cpu.fetchByte();
-        uint8_t oldValue = cpu.memory[addr];
+        uint8_t oldValue = cpu.readMemory(addr);
         uint8_t oldCarry = cpu.getFlag(CPU::C) ? 1 : 0;
         uint8_t result = (oldValue << 1) | oldCarry;
 
@@ -137,7 +137,7 @@ void initializeShiftOpcodes(std::unordered_map<uint8_t, std::function<void(CPU &
         cpu.setFlag(CPU::Z, result == 0);     // Zero
         cpu.setFlag(CPU::N, result & 0x80);   // Negative
 
-        cpu.memory[addr] = result;
+        cpu.writeMemory(addr, result);
 
         std::cout << "ROL Zero Page: Address = " << std::hex << (int)addr
                   << ", Value = " << (int)result
@@ -148,7 +148,7 @@ void initializeShiftOpcodes(std::unordered_map<uint8_t, std::function<void(CPU &
 
     opcodeTable[0x36] = [](CPU &cpu) { // ROL - Zero Page, X
         uint8_t addr = (cpu.fetchByte() + cpu.X) & 0xFF;
-        uint8_t oldValue = cpu.memory[addr];
+        uint8_t oldValue = cpu.readMemory(addr);
         uint8_t oldCarry = cpu.getFlag(CPU::C) ? 1 : 0;
         uint8_t result = (oldValue << 1) | oldCarry;
 
@@ -156,7 +156,7 @@ void initializeShiftOpcodes(std::unordered_map<uint8_t, std::function<void(CPU &
         cpu.setFlag(CPU::Z, result == 0);     // Zero
         cpu.setFlag(CPU::N, result & 0x80);   // Negative
 
-        cpu.memory[addr] = result;
+        cpu.writeMemory(addr, result);
 
         std::cout << "ROL Zero Page, X: Address = " << std::hex << (int)addr
                   << ", Value = " << (int)result
@@ -167,7 +167,7 @@ void initializeShiftOpcodes(std::unordered_map<uint8_t, std::function<void(CPU &
 
     opcodeTable[0x2E] = [](CPU &cpu) { // ROL - Absolute
         uint16_t addr = cpu.fetchWord();
-        uint8_t oldValue = cpu.memory[addr];
+        uint8_t oldValue = cpu.readMemory(addr);
         uint8_t oldCarry = cpu.getFlag(CPU::C) ? 1 : 0;
         uint8_t result = (oldValue << 1) | oldCarry;
 
@@ -175,7 +175,7 @@ void initializeShiftOpcodes(std::unordered_map<uint8_t, std::function<void(CPU &
         cpu.setFlag(CPU::Z, result == 0);     // Zero
         cpu.setFlag(CPU::N, result & 0x80);   // Negative
 
-        cpu.memory[addr] = result;
+        cpu.writeMemory(addr, result);
 
         std::cout << "ROL Absolute: Address = " << std::hex << (int)addr
                   << ", Value = " << (int)result
@@ -186,7 +186,7 @@ void initializeShiftOpcodes(std::unordered_map<uint8_t, std::function<void(CPU &
 
     opcodeTable[0x3E] = [](CPU &cpu) { // ROL - Absolute, X
         uint16_t addr = cpu.fetchWord() + cpu.X;
-        uint8_t oldValue = cpu.memory[addr];
+        uint8_t oldValue = cpu.readMemory(addr);
         uint8_t oldCarry = cpu.getFlag(CPU::C) ? 1 : 0;
         uint8_t result = (oldValue << 1) | oldCarry;
 
@@ -194,7 +194,7 @@ void initializeShiftOpcodes(std::unordered_map<uint8_t, std::function<void(CPU &
         cpu.setFlag(CPU::Z, result == 0);     // Zero
         cpu.setFlag(CPU::N, result & 0x80);   // Negative
 
-        cpu.memory[addr] = result;
+        cpu.writeMemory(addr, result);
 
         std::cout << "ROL Absolute, X: Address = " << std::hex << (int)addr
                   << ", Value = " << (int)result
@@ -226,7 +226,7 @@ void initializeShiftOpcodes(std::unordered_map<uint8_t, std::function<void(CPU &
 
     opcodeTable[0x66] = [](CPU &cpu) { // ROR - Zero Page
         uint8_t addr = cpu.fetchByte();
-        uint8_t oldValue = cpu.memory[addr];
+        uint8_t oldValue = cpu.readMemory(addr);
         uint8_t oldCarry = cpu.getFlag(CPU::C) ? 0x80 : 0x00;
         uint8_t result = (oldValue >> 1) | oldCarry;
 
@@ -234,7 +234,7 @@ void initializeShiftOpcodes(std::unordered_map<uint8_t, std::function<void(CPU &
         cpu.setFlag(CPU::Z, result == 0);     // Zero
         cpu.setFlag(CPU::N, result & 0x80);   // Negative
 
-        cpu.memory[addr] = result;
+        cpu.writeMemory(addr, result);
 
         std::cout << "ROR Zero Page: Address = " << std::hex << (int)addr
                   << ", Value = " << (int)result
@@ -245,7 +245,7 @@ void initializeShiftOpcodes(std::unordered_map<uint8_t, std::function<void(CPU &
 
     opcodeTable[0x76] = [](CPU &cpu) { // ROR - Zero Page, X
         uint8_t addr = (cpu.fetchByte() + cpu.X) & 0xFF;
-        uint8_t oldValue = cpu.memory[addr];
+        uint8_t oldValue = cpu.readMemory(addr);
         uint8_t oldCarry = cpu.getFlag(CPU::C) ? 0x80 : 0x00;
         uint8_t result = (oldValue >> 1) | oldCarry;
 
@@ -253,7 +253,7 @@ void initializeShiftOpcodes(std::unordered_map<uint8_t, std::function<void(CPU &
         cpu.setFlag(CPU::Z, result == 0);     // Zero
         cpu.setFlag(CPU::N, result & 0x80);   // Negative
 
-        cpu.memory[addr] = result;
+        cpu.writeMemory(addr, result);
 
         std::cout << "ROR Zero Page, X: Address = " << std::hex << (int)addr
                   << ", Value = " << (int)result
@@ -264,7 +264,7 @@ void initializeShiftOpcodes(std::unordered_map<uint8_t, std::function<void(CPU &
 
     opcodeTable[0x6E] = [](CPU &cpu) { // ROR - Absolute
         uint16_t addr = cpu.fetchWord();
-        uint8_t oldValue = cpu.memory[addr];
+        uint8_t oldValue = cpu.readMemory(addr);
         uint8_t oldCarry = cpu.getFlag(CPU::C) ? 0x80 : 0x00;
         uint8_t result = (oldValue >> 1) | oldCarry;
 
@@ -272,7 +272,7 @@ void initializeShiftOpcodes(std::unordered_map<uint8_t, std::function<void(CPU &
         cpu.setFlag(CPU::Z, result == 0);     // Zero
         cpu.setFlag(CPU::N, result & 0x80);   // Negative
 
-        cpu.memory[addr] = result;
+        cpu.writeMemory(addr, result);
 
         std::cout << "ROR Absolute: Address = " << std::hex << (int)addr
                   << ", Value = " << (int)result
@@ -283,7 +283,7 @@ void initializeShiftOpcodes(std::unordered_map<uint8_t, std::function<void(CPU &
 
     opcodeTable[0x7E] = [](CPU &cpu) { // ROR - Absolute, X
         uint16_t addr = cpu.fetchWord() + cpu.X;
-        uint8_t oldValue = cpu.memory[addr];
+        uint8_t oldValue = cpu.readMemory(addr);
         uint8_t oldCarry = cpu.getFlag(CPU::C) ? 0x80 : 0x00;
         uint8_t result = (oldValue >> 1) | oldCarry;
 
@@ -291,7 +291,7 @@ void initializeShiftOpcodes(std::unordered_map<uint8_t, std::function<void(CPU &
         cpu.setFlag(CPU::Z, result == 0);     // Zero
         cpu.setFlag(CPU::N, result & 0x80);   // Negative
 
-        cpu.memory[addr] = result;
+        cpu.writeMemory(addr, result);
 
         std::cout << "ROR Absolute, X: Address = " << std::hex << (int)addr
                   << ", Value = " << (int)result

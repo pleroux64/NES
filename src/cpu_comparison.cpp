@@ -40,58 +40,60 @@ void initializeComparisonOpcodes(std::unordered_map<uint8_t, std::function<void(
     // CMP Zero Page
     opcodeTable[0xC5] = [](CPU &cpu)
     {
-        uint8_t addr = cpu.fetchByte();   // Fetch zero page address
-        uint8_t value = cpu.memory[addr]; // Get value from memory
+        uint8_t addr = cpu.fetchByte();       // Fetch zero page address
+        uint8_t value = cpu.readMemory(addr); // Get value from memory
         cpu.performCMP(value);
     };
 
     // CMP Zero Page,X
     opcodeTable[0xD5] = [](CPU &cpu)
     {
-        uint8_t addr = cpu.fetchByte();                    // Fetch zero page address
-        uint8_t value = cpu.memory[(addr + cpu.X) & 0xFF]; // Add X to address (zero page wrapping)
+        uint8_t addr = cpu.fetchByte();                        // Fetch zero page address
+        uint8_t value = cpu.readMemory((addr + cpu.X) & 0xFF); // Add X to address (zero page wrapping)
         cpu.performCMP(value);
     };
 
     // CMP Absolute
     opcodeTable[0xCD] = [](CPU &cpu)
     {
-        uint16_t addr = cpu.fetchWord();  // Fetch 16-bit absolute address
-        uint8_t value = cpu.memory[addr]; // Get value from memory
+        uint16_t addr = cpu.fetchWord();      // Fetch 16-bit absolute address
+        uint8_t value = cpu.readMemory(addr); // Get value from memory
         cpu.performCMP(value);
     };
 
     // CMP Absolute,X
     opcodeTable[0xDD] = [](CPU &cpu)
     {
-        uint16_t addr = cpu.fetchWord();                     // Fetch 16-bit absolute address
-        uint8_t value = cpu.memory[(addr + cpu.X) & 0xFFFF]; // Add X to address
+        uint16_t addr = cpu.fetchWord();                         // Fetch 16-bit absolute address
+        uint8_t value = cpu.readMemory((addr + cpu.X) & 0xFFFF); // Add X to address
         cpu.performCMP(value);
     };
 
     // CMP Absolute,Y
     opcodeTable[0xD9] = [](CPU &cpu)
     {
-        uint16_t addr = cpu.fetchWord();                     // Fetch 16-bit absolute address
-        uint8_t value = cpu.memory[(addr + cpu.Y) & 0xFFFF]; // Add Y to address
+        uint16_t addr = cpu.fetchWord();                         // Fetch 16-bit absolute address
+        uint8_t value = cpu.readMemory((addr + cpu.Y) & 0xFFFF); // Add Y to address
         cpu.performCMP(value);
     };
 
     // CMP (Indirect,X)
     opcodeTable[0xC1] = [](CPU &cpu)
     {
-        uint8_t addr = cpu.fetchByte();                                                                      // Fetch zero page base address
-        uint16_t indAddr = cpu.memory[(addr + cpu.X) & 0xFF] | (cpu.memory[(addr + cpu.X + 1) & 0xFF] << 8); // Fetch 16-bit effective address
-        uint8_t value = cpu.memory[indAddr];                                                                 // Get value from memory
+        uint8_t addr = cpu.fetchByte(); // Fetch zero page base address
+        uint16_t indAddr = cpu.readMemory((addr + cpu.X) & 0xFF) | (cpu.readMemory((addr + cpu.X + 1) & 0xFF)
+                                                                    << 8); // Fetch 16-bit effective address
+        uint8_t value = cpu.readMemory(indAddr);                           // Get value from memory
         cpu.performCMP(value);
     };
 
     // CMP (Indirect),Y
     opcodeTable[0xD1] = [](CPU &cpu)
     {
-        uint8_t addr = cpu.fetchByte();                                    // Fetch zero page base address
-        uint16_t indAddr = cpu.memory[addr] | (cpu.memory[addr + 1] << 8); // Fetch 16-bit effective address
-        uint8_t value = cpu.memory[(indAddr + cpu.Y) & 0xFFFF];            // Add Y to effective address
+        uint8_t addr = cpu.fetchByte(); // Fetch zero page base address
+        uint16_t indAddr = cpu.readMemory(addr) | (cpu.readMemory(addr + 1)
+                                                   << 8);           // Fetch 16-bit effective address
+        uint8_t value = cpu.readMemory((indAddr + cpu.Y) & 0xFFFF); // Add Y to effective address
         cpu.performCMP(value);
     };
 
@@ -110,16 +112,16 @@ void initializeComparisonOpcodes(std::unordered_map<uint8_t, std::function<void(
     // CPX Zero Page
     opcodeTable[0xE4] = [](CPU &cpu)
     {
-        uint8_t addr = cpu.fetchByte();   // Fetch zero page address
-        uint8_t value = cpu.memory[addr]; // Get value from memory
+        uint8_t addr = cpu.fetchByte();       // Fetch zero page address
+        uint8_t value = cpu.readMemory(addr); // Get value from memory
         cpu.performCPX(value);
     };
 
     // CPX Absolute
     opcodeTable[0xEC] = [](CPU &cpu)
     {
-        uint16_t addr = cpu.fetchWord();  // Fetch 16-bit absolute address
-        uint8_t value = cpu.memory[addr]; // Get value from memory
+        uint16_t addr = cpu.fetchWord();      // Fetch 16-bit absolute address
+        uint8_t value = cpu.readMemory(addr); // Get value from memory
         cpu.performCPX(value);
     };
 
@@ -138,16 +140,16 @@ void initializeComparisonOpcodes(std::unordered_map<uint8_t, std::function<void(
     // CPY Zero Page
     opcodeTable[0xC4] = [](CPU &cpu)
     {
-        uint8_t addr = cpu.fetchByte();   // Fetch zero page address
-        uint8_t value = cpu.memory[addr]; // Get value from memory
+        uint8_t addr = cpu.fetchByte();       // Fetch zero page address
+        uint8_t value = cpu.readMemory(addr); // Get value from memory
         cpu.performCPY(value);
     };
 
     // CPY Absolute
     opcodeTable[0xCC] = [](CPU &cpu)
     {
-        uint16_t addr = cpu.fetchWord();  // Fetch 16-bit absolute address
-        uint8_t value = cpu.memory[addr]; // Get value from memory
+        uint16_t addr = cpu.fetchWord();      // Fetch 16-bit absolute address
+        uint8_t value = cpu.readMemory(addr); // Get value from memory
         cpu.performCPY(value);
     };
 

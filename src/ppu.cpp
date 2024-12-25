@@ -43,7 +43,16 @@ void PPU::writeRegister(uint16_t address, uint8_t value)
         std::cerr << "[PPU Debug] Old PPUCTRL: 0x" << std::hex << static_cast<int>(PPUCTRL) << std::endl;
         PPUCTRL = value;
         std::cerr << "[PPU Debug] New PPUCTRL written: 0x" << std::hex << static_cast<int>(PPUCTRL)
-                  << " (NMI enabled: " << ((PPUCTRL & 0x80) != 0) << ")" << std::endl;
+                  << " (NMI enabled: " << ((PPUCTRL & 0x80) != 0 ? "Yes" : "No") << ")" << std::endl;
+
+        if ((PPUCTRL & 0x80) == 0x80)
+        {
+            std::cerr << "[PPU Debug] NMI is now enabled. Waiting for VBlank to trigger.\n";
+        }
+        else
+        {
+            std::cerr << "[PPU Debug] NMI remains disabled.\n";
+        }
         break;
 
     case 0x2001: // PPUMASK
