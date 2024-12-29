@@ -71,7 +71,7 @@ This repository includes test ROMs for debugging:
 1. Clone the repository:
    ```bash
    git clone https://github.com/pleroux64/NES.git
-   cd NES
+   cd nes_emulator
    ```
 2. Compile the project using your preferred build system:
    ```bash
@@ -97,5 +97,3 @@ Contributions are welcome! To get started:
 
 ---
 
-## **License**
-This project is licensed under the MIT License. See the `LICENSE` file for details.
