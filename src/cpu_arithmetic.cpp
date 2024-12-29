@@ -31,16 +31,16 @@ void CPU::performINC(uint16_t addr)
     setFlag(Z, value == 0);     // Set Zero flag if result is 0
     setFlag(N, (value & 0x80)); // Set Negative flag if bit 7 is set
 
-    std::cout << "INC: Address: " << std::hex << addr
-              << ", Value: " << (int)value
-              << ", Z flag: " << getFlag(Z)
-              << ", N flag: " << getFlag(N) << std::dec << std::endl;
+    // std::cout << "INC: Address: " << std::hex << addr
+    //           << ", Value: " << (int)value
+    //           << ", Z flag: " << getFlag(Z)
+    //           << ", N flag: " << getFlag(N) << std::dec << std::endl;
 }
 
 void CPU::performDEC(uint16_t addr)
 {
     uint8_t value = readMemory(addr); // Read the value from memory
-    std::cout << "Initial value: " << std::hex << (int)value << std::dec << std::endl;
+    //std::cout << "Initial value: " << std::hex << (int)value << std::dec << std::endl;
 
     value--;                  // Decrement the value
     writeMemory(addr, value); // Write the decremented value back to memory
@@ -48,10 +48,10 @@ void CPU::performDEC(uint16_t addr)
     setFlag(Z, value == 0);          // Set Zero flag if the result is 0
     setFlag(N, (value & 0x80) != 0); // Set Negative flag if bit 7 is set
 
-    std::cout << "DEC: Address: " << std::hex << addr
-              << ", Value: " << (int)value
-              << ", Z flag: " << getFlag(Z)
-              << ", N flag: " << getFlag(N) << std::dec << std::endl;
+    // std::cout << "DEC: Address: " << std::hex << addr
+    //           << ", Value: " << (int)value
+    //           << ", Z flag: " << getFlag(Z)
+    //           << ", N flag: " << getFlag(N) << std::dec << std::endl;
 }
 
 void CPU::performINX()
@@ -60,9 +60,9 @@ void CPU::performINX()
     setFlag(Z, X == 0);          // Set Zero flag if X is 0
     setFlag(N, (X & 0x80) != 0); // Set Negative flag if bit 7 of X is set
 
-    std::cout << "INX: X = " << std::hex << (int)X
-              << ", Z flag: " << getFlag(Z)
-              << ", N flag: " << getFlag(N) << std::dec << std::endl;
+    // std::cout << "INX: X = " << std::hex << (int)X
+    //           << ", Z flag: " << getFlag(Z)
+    //           << ", N flag: " << getFlag(N) << std::dec << std::endl;
 }
 
 void CPU::performINY()
@@ -71,9 +71,9 @@ void CPU::performINY()
     setFlag(Z, Y == 0);          // Set Zero flag if Y is 0
     setFlag(N, (Y & 0x80) != 0); // Set Negative flag if bit 7 of Y is set
 
-    std::cout << "INY: Y = " << std::hex << (int)Y
-              << ", Z flag: " << getFlag(Z)
-              << ", N flag: " << getFlag(N) << std::dec << std::endl;
+    // std::cout << "INY: Y = " << std::hex << (int)Y
+    //           << ", Z flag: " << getFlag(Z)
+    //           << ", N flag: " << getFlag(N) << std::dec << std::endl;
 }
 
 void initializeArithmeticOpcodes(std::unordered_map<uint8_t, std::function<void(CPU &)>> &opcodeTable)
@@ -285,15 +285,15 @@ void initializeArithmeticOpcodes(std::unordered_map<uint8_t, std::function<void(
 #pragma region DEX Opcodes
 
     opcodeTable[0xCA] = [](CPU &cpu) { // DEX - Decrement X
-        std::cout << "Executing DEX: Decrement X Register (X)" << std::endl;
+        //std::cout << "Executing DEX: Decrement X Register (X)" << std::endl;
 
         cpu.X--;                             // Decrement the X register
         cpu.setFlag(CPU::Z, cpu.X == 0);     // Set Zero flag if X == 0
         cpu.setFlag(CPU::N, (cpu.X & 0x80)); // Set Negative flag if bit 7 of X is set
 
-        std::cout << "DEX: New X: " << std::hex << (int)cpu.X
-                  << ", Z flag: " << cpu.getFlag(CPU::Z)
-                  << ", N flag: " << cpu.getFlag(CPU::N) << std::dec << std::endl;
+        // std::cout << "DEX: New X: " << std::hex << (int)cpu.X
+        //           << ", Z flag: " << cpu.getFlag(CPU::Z)
+        //           << ", N flag: " << cpu.getFlag(CPU::N) << std::dec << std::endl;
     };
 
 #pragma endregion
@@ -312,15 +312,15 @@ void initializeArithmeticOpcodes(std::unordered_map<uint8_t, std::function<void(
 #pragma region DEY Opcodes
 
     opcodeTable[0x88] = [](CPU &cpu) { // DEY - Decrement Y
-        std::cout << "Executing DEY: Decrement Y Register (Y)" << std::endl;
+        //std::cout << "Executing DEY: Decrement Y Register (Y)" << std::endl;
 
         cpu.Y--;                             // Decrement the Y register
         cpu.setFlag(CPU::Z, cpu.Y == 0);     // Set Zero flag if Y == 0
         cpu.setFlag(CPU::N, (cpu.Y & 0x80)); // Set Negative flag if bit 7 of Y is set
 
-        std::cout << "DEY: New Y: " << std::hex << (int)cpu.Y
-                  << ", Z flag: " << cpu.getFlag(CPU::Z)
-                  << ", N flag: " << cpu.getFlag(CPU::N) << std::dec << std::endl;
+        // std::cout << "DEY: New Y: " << std::hex << (int)cpu.Y
+        //           << ", Z flag: " << cpu.getFlag(CPU::Z)
+        //           << ", N flag: " << cpu.getFlag(CPU::N) << std::dec << std::endl;
     };
 #pragma endregion
 }

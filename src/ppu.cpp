@@ -41,9 +41,18 @@ void PPU::writeRegister(uint16_t address, uint8_t value)
     {
     case 0x2000: // PPUCTRL
         std::cerr << "[PPU Debug] Old PPUCTRL: 0x" << std::hex << static_cast<int>(PPUCTRL) << std::endl;
+
         PPUCTRL = value;
+
         std::cerr << "[PPU Debug] New PPUCTRL written: 0x" << std::hex << static_cast<int>(PPUCTRL)
-                  << " (NMI enabled: " << ((PPUCTRL & 0x80) != 0 ? "Yes" : "No") << ")" << std::endl;
+                  << " (NMI enabled: " << ((PPUCTRL & 0x80) != 0 ? "Yes" : "No") << ", "
+                  << "Base nametable: " << ((PPUCTRL & 0x03) == 0 ? "0x2000" : (PPUCTRL & 0x03) == 1 ? "0x2400"
+                                                                           : (PPUCTRL & 0x03) == 2   ? "0x2800"
+                                                                                                     : "0x2C00")
+                  << ", "
+                  << "Increment mode: " << ((PPUCTRL & 0x04) ? "32 bytes" : "1 byte") << ", "
+                  << "Sprite pattern table: " << ((PPUCTRL & 0x08) ? "0x1000" : "0x0000") << ", "
+                  << "Background pattern table: " << ((PPUCTRL & 0x10) ? "0x1000" : "0x0000") << ")" << std::endl;
 
         if ((PPUCTRL & 0x80) == 0x80)
         {
@@ -148,6 +157,8 @@ void PPU::renderFrame()
     renderBackground();
     renderSprites();
 
+    debugNametable(0x2000);
+
     // Set VBlank flag in PPUSTATUS (bit 7)
     PPUSTATUS |= 0x80; // Indicates the start of VBlank
     std::cerr << "[PPU Debug] VBlank flag set. PPUSTATUS: 0b"
@@ -187,6 +198,10 @@ void PPU::renderBackground()
     const int screenWidth = 256;
     const int screenHeight = 240;
 
+    std::cerr << "[PPU Debug] Rendering Background..." << std::endl;
+    std::cerr << "[PPU Debug] Nametable Base Address: 0x" << std::hex << nametableBase << std::endl;
+    std::cerr << "[PPU Debug] Pattern Table Base Address: 0x" << std::hex << patternTableBase << std::endl;
+
     for (int tileY = 0; tileY < 30; ++tileY)
     {
         for (int tileX = 0; tileX < 32; ++tileX)
@@ -194,10 +209,21 @@ void PPU::renderBackground()
             uint16_t tileAddr = resolveNametableAddress(nametableBase + (tileY * 32) + tileX);
             uint8_t tileIndex = memory[tileAddr];
 
+            // Debugging tile information
+            std::cerr << "[PPU Debug] Tile Position (X: " << tileX << ", Y: " << tileY
+                      << ") -> Nametable Address: 0x" << std::hex << tileAddr
+                      << ", Tile Index: 0x" << std::hex << static_cast<int>(tileIndex) << std::endl;
+
             for (int row = 0; row < 8; ++row)
             {
                 uint8_t plane1 = memory[patternTableBase + (tileIndex * 16) + row];
                 uint8_t plane2 = memory[patternTableBase + (tileIndex * 16) + row + 8];
+
+                // Debugging pattern table information
+                std::cerr << "[PPU Debug] Tile Index: 0x" << std::hex << static_cast<int>(tileIndex)
+                          << ", Row: " << row
+                          << ", Plane 1: 0b" << std::bitset<8>(plane1)
+                          << ", Plane 2: 0b" << std::bitset<8>(plane2) << std::endl;
 
                 for (int col = 0; col < 8; ++col)
                 {
@@ -211,12 +237,20 @@ void PPU::renderBackground()
                     {
                         framebuffer[screenY * screenWidth + screenX] =
                             (color << 16) | (color << 8) | color; // Set pixel color
+
+                        // Debugging framebuffer writes
+                        std::cerr << "[PPU Debug] Framebuffer Write - Screen Position (X: " << screenX
+                                  << ", Y: " << screenY << "), Color: 0x" << std::hex << static_cast<int>(color)
+                                  << std::endl;
                     }
                 }
             }
         }
     }
+
+    std::cerr << "[PPU Debug] Background rendering complete." << std::endl;
 }
+
 
 void PPU::renderSprites()
 {
@@ -261,6 +295,16 @@ void PPU::renderSprites()
     }
 }
 
+void PPU::writeDMA(uint8_t value)
+{
+    uint16_t baseAddress = value * 0x100; // Calculate base address
+    for (int i = 0; i < 256; i++)
+    {
+        oam[i] = cpu->readMemory(baseAddress + i); // Copy byte-by-byte from CPU memory
+    }
+    std::cerr << "[PPU Debug] OAM DMA Transfer complete. Source: 0x" << std::hex << baseAddress << std::endl;
+}
+
 uint16_t PPU::resolveNametableAddress(uint16_t address)
 {
     if (address >= 0x2000 && address < 0x3000)
@@ -279,12 +323,28 @@ uint16_t PPU::resolveNametableAddress(uint16_t address)
     return address; // Not a nametable address
 }
 
-void PPU::debugPatternTable() {
-    for (uint16_t i = 0x0000; i < 0x2000; i += 16) {
+void PPU::debugPatternTable()
+{
+    for (uint16_t i = 0x0000; i < 0x2000; i += 16)
+    {
         std::cout << "Tile " << (i / 16) << ": ";
-        for (int j = 0; j < 16; j++) {
+        for (int j = 0; j < 16; j++)
+        {
             std::cout << std::hex << static_cast<int>(memory[i + j]) << " ";
         }
         std::cout << std::endl;
     }
+}
+
+void PPU::debugNametable(uint16_t nametableBase)
+{
+    std::cerr << "[PPU Debug] Dumping Nametable at 0x" << std::hex << nametableBase << ":" << std::endl;
+    for (uint16_t offset = 0; offset < 0x400; offset++)
+    {
+        uint8_t tileIndex = memory[nametableBase + offset];
+        if (offset % 32 == 0)
+            std::cerr << std::endl; // New row every 32 tiles
+        std::cerr << std::hex << (int)tileIndex << " ";
+    }
+    std::cerr << std::endl;
 }

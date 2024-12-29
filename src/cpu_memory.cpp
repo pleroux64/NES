@@ -72,31 +72,31 @@ void initializeMemoryOpcodes(std::unordered_map<uint8_t, std::function<void(CPU 
     opcodeTable[0x85] = [](CPU &cpu) {     // STA Zero Page
         uint8_t address = cpu.fetchByte(); // Fetch the zero-page address
         cpu.writeMemory(address, cpu.A);   // Store A into memory
-        std::cout << "STA Zero Page: A = " << std::hex << (int)cpu.A << ", Address = " << (int)address << std::endl;
+        //std::cout << "STA Zero Page: A = " << std::hex << (int)cpu.A << ", Address = " << (int)address << std::endl;
     };
 
     opcodeTable[0x95] = [](CPU &cpu) {                      // STA Zero Page,X
         uint8_t address = (cpu.fetchByte() + cpu.X) & 0xFF; // Add X and wrap around at 0xFF
         cpu.writeMemory(address, cpu.A);                    // Store A into memory
-        std::cout << "STA Zero Page,X: A = " << std::hex << (int)cpu.A << ", Address = " << (int)address << std::endl;
+        //std::cout << "STA Zero Page,X: A = " << std::hex << (int)cpu.A << ", Address = " << (int)address << std::endl;
     };
 
     opcodeTable[0x8D] = [](CPU &cpu) {      // STA Absolute
         uint16_t address = cpu.fetchWord(); // Fetch the 16-bit absolute address
         cpu.writeMemory(address, cpu.A);    // Store A into memory
-        std::cout << "STA Absolute: A = " << std::hex << (int)cpu.A << ", Address = " << (int)address << std::endl;
+        //std::cout << "STA Absolute: A = " << std::hex << (int)cpu.A << ", Address = " << (int)address << std::endl;
     };
 
     opcodeTable[0x9D] = [](CPU &cpu) {              // STA Absolute,X
         uint16_t address = cpu.fetchWord() + cpu.X; // Add X to the absolute address
         cpu.writeMemory(address, cpu.A);            // Store A into memory
-        std::cout << "STA Absolute,X: A = " << std::hex << (int)cpu.A << ", Address = " << (int)address << std::endl;
+        //std::cout << "STA Absolute,X: A = " << std::hex << (int)cpu.A << ", Address = " << (int)address << std::endl;
     };
 
     opcodeTable[0x99] = [](CPU &cpu) {              // STA Absolute,Y
         uint16_t address = cpu.fetchWord() + cpu.Y; // Add Y to the absolute address
         cpu.writeMemory(address, cpu.A);            // Store A into memory
-        std::cout << "STA Absolute,Y: A = " << std::hex << (int)cpu.A << ", Address = " << (int)address << std::endl;
+        //std::cout << "STA Absolute,Y: A = " << std::hex << (int)cpu.A << ", Address = " << (int)address << std::endl;
     };
 
     opcodeTable[0x81] = [](CPU &cpu) {                          // STA (Indirect,X)
@@ -104,7 +104,7 @@ void initializeMemoryOpcodes(std::unordered_map<uint8_t, std::function<void(CPU 
         uint16_t address = cpu.readMemory(baseAddress) | (cpu.readMemory((baseAddress + 1) & 0xFF)
                                                           << 8); // Fetch 16-bit address
         cpu.writeMemory(address, cpu.A);                         // Store A into memory
-        std::cout << "STA (Indirect,X): A = " << std::hex << (int)cpu.A << ", Address = " << (int)address << std::endl;
+        //std::cout << "STA (Indirect,X): A = " << std::hex << (int)cpu.A << ", Address = " << (int)address << std::endl;
     };
 
     opcodeTable[0x91] = [](CPU &cpu) {         // STA (Indirect),Y
@@ -113,7 +113,7 @@ void initializeMemoryOpcodes(std::unordered_map<uint8_t, std::function<void(CPU 
                                                            << 8)) +
                            cpu.Y;        // Fetch address and add Y
         cpu.writeMemory(address, cpu.A); // Store A into memory
-        std::cout << "STA (Indirect),Y: A = " << std::hex << (int)cpu.A << ", Address = " << (int)address << std::endl;
+        //std::cout << "STA (Indirect),Y: A = " << std::hex << (int)cpu.A << ", Address = " << (int)address << std::endl;
     };
 
 #pragma endregion
@@ -168,19 +168,19 @@ void initializeMemoryOpcodes(std::unordered_map<uint8_t, std::function<void(CPU 
     opcodeTable[0x86] = [](CPU &cpu) {     // STX Zero Page
         uint8_t address = cpu.fetchByte(); // Fetch the zero-page address
         cpu.writeMemory(address, cpu.X);   // Store X into memory
-        std::cout << "STX Zero Page: X = " << std::hex << (int)cpu.X << ", Address = " << (int)address << std::endl;
+        //std::cout << "STX Zero Page: X = " << std::hex << (int)cpu.X << ", Address = " << (int)address << std::endl;
     };
 
     opcodeTable[0x96] = [](CPU &cpu) {                      // STX Zero Page,Y
         uint8_t address = (cpu.fetchByte() + cpu.Y) & 0xFF; // Add Y and wrap around at 0xFF
         cpu.writeMemory(address, cpu.X);                    // Store X into memory
-        std::cout << "STX Zero Page,Y: X = " << std::hex << (int)cpu.X << ", Address = " << (int)address << std::endl;
+        //std::cout << "STX Zero Page,Y: X = " << std::hex << (int)cpu.X << ", Address = " << (int)address << std::endl;
     };
 
     opcodeTable[0x8E] = [](CPU &cpu) {      // STX Absolute
         uint16_t address = cpu.fetchWord(); // Fetch the 16-bit absolute address
         cpu.writeMemory(address, cpu.X);    // Store X into memory
-        std::cout << "STX Absolute: X = " << std::hex << (int)cpu.X << ", Address = " << (int)address << std::endl;
+        //std::cout << "STX Absolute: X = " << std::hex << (int)cpu.X << ", Address = " << (int)address << std::endl;
     };
 
 #pragma endregion
@@ -235,19 +235,19 @@ void initializeMemoryOpcodes(std::unordered_map<uint8_t, std::function<void(CPU 
     opcodeTable[0x84] = [](CPU &cpu) {     // STY Zero Page
         uint8_t address = cpu.fetchByte(); // Fetch the zero-page address
         cpu.writeMemory(address, cpu.Y);   // Store Y into memory
-        std::cout << "STY Zero Page: Y = " << std::hex << (int)cpu.Y << ", Address = " << (int)address << std::endl;
+       // std::cout << "STY Zero Page: Y = " << std::hex << (int)cpu.Y << ", Address = " << (int)address << std::endl;
     };
 
     opcodeTable[0x94] = [](CPU &cpu) {                      // STY Zero Page,X
         uint8_t address = (cpu.fetchByte() + cpu.X) & 0xFF; // Add X and wrap around at 0xFF
         cpu.writeMemory(address, cpu.Y);                    // Store Y into memory
-        std::cout << "STY Zero Page,X: Y = " << std::hex << (int)cpu.Y << ", Address = " << (int)address << std::endl;
+        //std::cout << "STY Zero Page,X: Y = " << std::hex << (int)cpu.Y << ", Address = " << (int)address << std::endl;
     };
 
     opcodeTable[0x8C] = [](CPU &cpu) {      // STY Absolute
         uint16_t address = cpu.fetchWord(); // Fetch the 16-bit absolute address
         cpu.writeMemory(address, cpu.Y);    // Store Y into memory
-        std::cout << "STY Absolute: Y = " << std::hex << (int)cpu.Y << ", Address = " << (int)address << std::endl;
+        //std::cout << "STY Absolute: Y = " << std::hex << (int)cpu.Y << ", Address = " << (int)address << std::endl;
     };
 #pragma endregion
 }

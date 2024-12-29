@@ -65,13 +65,13 @@ void CPU::setFlag(uint8_t flag, bool value)
 bool CPU::getFlag(uint8_t flag)
 {
     bool result = (P & (1 << flag)) != 0;
-    std::cerr << "[Debug] getFlag(" << static_cast<int>(flag)
-              << "): P = " << std::bitset<8>(P)
-              << ", Bit Values: [N=" << ((P & 0x80) != 0)
-              << ", V=" << ((P & 0x40) != 0)
-              << ", ...]"
-              << ", (1 << flag) = " << std::bitset<8>(1 << flag)
-              << ", Result = " << result << "\n";
+    // std::cerr << "[Debug] getFlag(" << static_cast<int>(flag)
+    //           << "): P = " << std::bitset<8>(P)
+    //           << ", Bit Values: [N=" << ((P & 0x80) != 0)
+    //           << ", V=" << ((P & 0x40) != 0)
+    //           << ", ...]"
+    //           << ", (1 << flag) = " << std::bitset<8>(1 << flag)
+    //           << ", Result = " << result << "\n";
     return result;
 }
 
@@ -79,8 +79,8 @@ void CPU::printMemory(uint16_t start, uint16_t end)
 {
     for (uint16_t addr = start; addr <= end; ++addr)
     {
-        std::cout << "Memory[0x" << std::hex << addr << "] = 0x"
-                  << std::hex << static_cast<int>(memory[addr]) << std::endl;
+        // std::cout << "Memory[0x" << std::hex << addr << "] = 0x"
+        //           << std::hex << static_cast<int>(memory[addr]) << std::endl;
     }
 }
 
@@ -88,8 +88,8 @@ void CPU::dumpMemoryToConsole(uint16_t start, uint16_t end)
 {
     for (uint16_t addr = start; addr <= end; addr++)
     {
-        std::cout << "Memory[0x" << std::hex << addr << "] = 0x"
-                  << std::hex << (int)memory[addr] << std::endl;
+        // std::cout << "Memory[0x" << std::hex << addr << "] = 0x"
+        //           << std::hex << (int)memory[addr] << std::endl;
     }
 }
 
@@ -194,6 +194,23 @@ void CPU::writeMemory(uint16_t address, uint8_t value)
     //           << static_cast<int>(value) 
     //           << std::endl;
 
+    if (address == 0x4014) // Handle OAMDMA
+    {
+        std::cerr << "[CPU Debug] OAMDMA triggered. Base address: 0x" 
+                  << std::hex << (value * 0x100) 
+                  << std::endl;
+
+        if (ppu) // Ensure PPU is linked
+        {
+            ppu->writeDMA(value); // Trigger DMA transfer in the PPU
+        }
+        else
+        {
+            std::cerr << "[CPU Debug] OAMDMA write with no linked PPU.\n";
+        }
+        return;
+    }
+
     if (address >= 0x2000 && address <= 0x3FFF)
     {
         // PPU registers are mirrored every 8 bytes in this range
@@ -212,15 +229,10 @@ void CPU::writeMemory(uint16_t address, uint8_t value)
         return;
     }
 
-    // Handle general RAM or other I/O
-    // std::cerr << "[CPU Debug] Writing to general memory: Address = 0x" 
-    //           << std::hex << address 
-    //           << ", Value = 0x" 
-    //           << static_cast<int>(value) 
-    //           << std::endl;
-
+    // General memory write
     memory[address] = value;
 }
+
 
 
 void CPU::setPPU(PPU *ppuInstance)
@@ -238,9 +250,9 @@ std::function<void(CPU &)> withBaseCycles(uint8_t opcode, int baseCycles, std::f
         handler(cpu);
 
         // Debugging output (optional)
-        std::cerr << "Opcode 0x" << std::hex << static_cast<int>(opcode)
-                  << " executed. Base Cycles: " << baseCycles
-                  << ", Total Cycles: " << cpu.cycles << std::dec << '\n';
+        // std::cerr << "Opcode 0x" << std::hex << static_cast<int>(opcode)
+        //           << " executed. Base Cycles: " << baseCycles
+        //           << ", Total Cycles: " << cpu.cycles << std::dec << '\n';
     };
 }
 
@@ -285,21 +297,33 @@ void CPU::execute()
 {
     if (nmiRequested)
     {
+        std::cerr << "[CPU Debug] NMI requested. Handling NMI." << std::endl;
         handleNMI();
         nmiRequested = false; // Clear the signal after handling
         return;               // Prevent further opcode execution this cycle
     }
 
+    // Fetch the opcode
     uint8_t opcode = fetchByte();
+
+    // Log the fetched opcode and PC for debugging
+    std::cerr << "[CPU Debug] Fetched opcode: 0x" << std::hex << static_cast<int>(opcode)
+              << " at PC: 0x" << PC - 1 << std::endl;
+
     if (opcodeTable.count(opcode))
     {
+        // Log the execution of the opcode
+        std::cerr << "[CPU Debug] Executing opcode: 0x" << std::hex << static_cast<int>(opcode) << std::endl;
         opcodeTable[opcode](*this); // Execute the corresponding function
     }
     else
     {
-        std::cerr << "Unknown opcode: 0x" << std::hex << (int)opcode << std::dec << std::endl;
+        // Log unknown opcode
+        std::cerr << "[Error] Unknown opcode: 0x" << std::hex << static_cast<int>(opcode) << " at PC: 0x"
+                  << PC - 1 << std::endl;
     }
 }
+
 
 // Initialize the opcode table
 void CPU::initializeOpcodeTable()

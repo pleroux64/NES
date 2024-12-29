@@ -25,7 +25,8 @@ SRCS = $(SRC_DIR)/main.cpp \
        $(SRC_DIR)/opcode_cycles.cpp \
        $(SRC_DIR)/cycle_exceptions.cpp \
        $(SRC_DIR)/controller.cpp \
-       $(SRC_DIR)/ppu.cpp  # Added PPU source file
+       $(SRC_DIR)/ppu.cpp \
+       $(SRC_DIR)/debug.cpp  # Added Debug source file
 
 OBJS = $(patsubst $(SRC_DIR)/%.cpp, $(BUILD_DIR)/%.o, $(SRCS))
 

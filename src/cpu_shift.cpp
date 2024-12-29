@@ -13,15 +13,15 @@ void CPU::performASL(uint8_t &value)
 
 void CPU::performLSR(uint8_t &value)
 {
-    std::cout << "LSR: Initial value = " << std::hex << (int)value << std::dec << std::endl;
+    //std::cout << "LSR: Initial value = " << std::hex << (int)value << std::dec << std::endl;
     setFlag(CPU::C, value & 0x01); // Set carry to bit 0
     value >>= 1;                   // Shift right by 1
     setFlag(CPU::Z, value == 0);   // Set zero flag if result is zero
     setFlag(CPU::N, false);        // Clear negative flag (always 0 after LSR)
-    std::cout << "LSR: Result = " << std::hex << (int)value
-              << ", Carry = " << getFlag(CPU::C)
-              << ", Zero = " << getFlag(CPU::Z)
-              << ", Negative = " << getFlag(CPU::N) << std::dec << std::endl;
+    // std::cout << "LSR: Result = " << std::hex << (int)value
+    //           << ", Carry = " << getFlag(CPU::C)
+    //           << ", Zero = " << getFlag(CPU::Z)
+    //           << ", Negative = " << getFlag(CPU::N) << std::dec << std::endl;
 }
 
 void CPU::performLSRMemory(uint16_t address)
@@ -121,10 +121,10 @@ void initializeShiftOpcodes(std::unordered_map<uint8_t, std::function<void(CPU &
 
         cpu.A = result;
 
-        std::cout << "ROL Accumulator: A = " << std::hex << (int)cpu.A
-                  << ", Carry = " << cpu.getFlag(CPU::C)
-                  << ", Zero = " << cpu.getFlag(CPU::Z)
-                  << ", Negative = " << cpu.getFlag(CPU::N) << std::dec << std::endl;
+        // std::cout << "ROL Accumulator: A = " << std::hex << (int)cpu.A
+        //           << ", Carry = " << cpu.getFlag(CPU::C)
+        //           << ", Zero = " << cpu.getFlag(CPU::Z)
+        //           << ", Negative = " << cpu.getFlag(CPU::N) << std::dec << std::endl;
     };
 
     opcodeTable[0x26] = [](CPU &cpu) { // ROL - Zero Page
@@ -139,11 +139,11 @@ void initializeShiftOpcodes(std::unordered_map<uint8_t, std::function<void(CPU &
 
         cpu.writeMemory(addr, result);
 
-        std::cout << "ROL Zero Page: Address = " << std::hex << (int)addr
-                  << ", Value = " << (int)result
-                  << ", Carry = " << cpu.getFlag(CPU::C)
-                  << ", Zero = " << cpu.getFlag(CPU::Z)
-                  << ", Negative = " << cpu.getFlag(CPU::N) << std::dec << std::endl;
+        // std::cout << "ROL Zero Page: Address = " << std::hex << (int)addr
+        //           << ", Value = " << (int)result
+        //           << ", Carry = " << cpu.getFlag(CPU::C)
+        //           << ", Zero = " << cpu.getFlag(CPU::Z)
+        //           << ", Negative = " << cpu.getFlag(CPU::N) << std::dec << std::endl;
     };
 
     opcodeTable[0x36] = [](CPU &cpu) { // ROL - Zero Page, X
@@ -158,11 +158,11 @@ void initializeShiftOpcodes(std::unordered_map<uint8_t, std::function<void(CPU &
 
         cpu.writeMemory(addr, result);
 
-        std::cout << "ROL Zero Page, X: Address = " << std::hex << (int)addr
-                  << ", Value = " << (int)result
-                  << ", Carry = " << cpu.getFlag(CPU::C)
-                  << ", Zero = " << cpu.getFlag(CPU::Z)
-                  << ", Negative = " << cpu.getFlag(CPU::N) << std::dec << std::endl;
+        // std::cout << "ROL Zero Page, X: Address = " << std::hex << (int)addr
+        //           << ", Value = " << (int)result
+        //           << ", Carry = " << cpu.getFlag(CPU::C)
+        //           << ", Zero = " << cpu.getFlag(CPU::Z)
+        //           << ", Negative = " << cpu.getFlag(CPU::N) << std::dec << std::endl;
     };
 
     opcodeTable[0x2E] = [](CPU &cpu) { // ROL - Absolute
@@ -177,11 +177,11 @@ void initializeShiftOpcodes(std::unordered_map<uint8_t, std::function<void(CPU &
 
         cpu.writeMemory(addr, result);
 
-        std::cout << "ROL Absolute: Address = " << std::hex << (int)addr
-                  << ", Value = " << (int)result
-                  << ", Carry = " << cpu.getFlag(CPU::C)
-                  << ", Zero = " << cpu.getFlag(CPU::Z)
-                  << ", Negative = " << cpu.getFlag(CPU::N) << std::dec << std::endl;
+        // std::cout << "ROL Absolute: Address = " << std::hex << (int)addr
+        //           << ", Value = " << (int)result
+        //           << ", Carry = " << cpu.getFlag(CPU::C)
+        //           << ", Zero = " << cpu.getFlag(CPU::Z)
+        //           << ", Negative = " << cpu.getFlag(CPU::N) << std::dec << std::endl;
     };
 
     opcodeTable[0x3E] = [](CPU &cpu) { // ROL - Absolute, X
@@ -196,11 +196,11 @@ void initializeShiftOpcodes(std::unordered_map<uint8_t, std::function<void(CPU &
 
         cpu.writeMemory(addr, result);
 
-        std::cout << "ROL Absolute, X: Address = " << std::hex << (int)addr
-                  << ", Value = " << (int)result
-                  << ", Carry = " << cpu.getFlag(CPU::C)
-                  << ", Zero = " << cpu.getFlag(CPU::Z)
-                  << ", Negative = " << cpu.getFlag(CPU::N) << std::dec << std::endl;
+        // std::cout << "ROL Absolute, X: Address = " << std::hex << (int)addr
+        //           << ", Value = " << (int)result
+        //           << ", Carry = " << cpu.getFlag(CPU::C)
+        //           << ", Zero = " << cpu.getFlag(CPU::Z)
+        //           << ", Negative = " << cpu.getFlag(CPU::N) << std::dec << std::endl;
     };
 
 #pragma endregion
@@ -218,10 +218,10 @@ void initializeShiftOpcodes(std::unordered_map<uint8_t, std::function<void(CPU &
 
         cpu.A = result;
 
-        std::cout << "ROR Accumulator: A = " << std::hex << (int)cpu.A
-                  << ", Carry = " << cpu.getFlag(CPU::C)
-                  << ", Zero = " << cpu.getFlag(CPU::Z)
-                  << ", Negative = " << cpu.getFlag(CPU::N) << std::dec << std::endl;
+        // std::cout << "ROR Accumulator: A = " << std::hex << (int)cpu.A
+        //           << ", Carry = " << cpu.getFlag(CPU::C)
+        //           << ", Zero = " << cpu.getFlag(CPU::Z)
+        //           << ", Negative = " << cpu.getFlag(CPU::N) << std::dec << std::endl;
     };
 
     opcodeTable[0x66] = [](CPU &cpu) { // ROR - Zero Page
@@ -236,11 +236,11 @@ void initializeShiftOpcodes(std::unordered_map<uint8_t, std::function<void(CPU &
 
         cpu.writeMemory(addr, result);
 
-        std::cout << "ROR Zero Page: Address = " << std::hex << (int)addr
-                  << ", Value = " << (int)result
-                  << ", Carry = " << cpu.getFlag(CPU::C)
-                  << ", Zero = " << cpu.getFlag(CPU::Z)
-                  << ", Negative = " << cpu.getFlag(CPU::N) << std::dec << std::endl;
+        // std::cout << "ROR Zero Page: Address = " << std::hex << (int)addr
+        //           << ", Value = " << (int)result
+        //           << ", Carry = " << cpu.getFlag(CPU::C)
+        //           << ", Zero = " << cpu.getFlag(CPU::Z)
+        //           << ", Negative = " << cpu.getFlag(CPU::N) << std::dec << std::endl;
     };
 
     opcodeTable[0x76] = [](CPU &cpu) { // ROR - Zero Page, X
@@ -255,11 +255,11 @@ void initializeShiftOpcodes(std::unordered_map<uint8_t, std::function<void(CPU &
 
         cpu.writeMemory(addr, result);
 
-        std::cout << "ROR Zero Page, X: Address = " << std::hex << (int)addr
-                  << ", Value = " << (int)result
-                  << ", Carry = " << cpu.getFlag(CPU::C)
-                  << ", Zero = " << cpu.getFlag(CPU::Z)
-                  << ", Negative = " << cpu.getFlag(CPU::N) << std::dec << std::endl;
+        // std::cout << "ROR Zero Page, X: Address = " << std::hex << (int)addr
+        //           << ", Value = " << (int)result
+        //           << ", Carry = " << cpu.getFlag(CPU::C)
+        //           << ", Zero = " << cpu.getFlag(CPU::Z)
+        //           << ", Negative = " << cpu.getFlag(CPU::N) << std::dec << std::endl;
     };
 
     opcodeTable[0x6E] = [](CPU &cpu) { // ROR - Absolute
@@ -274,11 +274,11 @@ void initializeShiftOpcodes(std::unordered_map<uint8_t, std::function<void(CPU &
 
         cpu.writeMemory(addr, result);
 
-        std::cout << "ROR Absolute: Address = " << std::hex << (int)addr
-                  << ", Value = " << (int)result
-                  << ", Carry = " << cpu.getFlag(CPU::C)
-                  << ", Zero = " << cpu.getFlag(CPU::Z)
-                  << ", Negative = " << cpu.getFlag(CPU::N) << std::dec << std::endl;
+        // std::cout << "ROR Absolute: Address = " << std::hex << (int)addr
+        //           << ", Value = " << (int)result
+        //           << ", Carry = " << cpu.getFlag(CPU::C)
+        //           << ", Zero = " << cpu.getFlag(CPU::Z)
+        //           << ", Negative = " << cpu.getFlag(CPU::N) << std::dec << std::endl;
     };
 
     opcodeTable[0x7E] = [](CPU &cpu) { // ROR - Absolute, X
@@ -293,11 +293,11 @@ void initializeShiftOpcodes(std::unordered_map<uint8_t, std::function<void(CPU &
 
         cpu.writeMemory(addr, result);
 
-        std::cout << "ROR Absolute, X: Address = " << std::hex << (int)addr
-                  << ", Value = " << (int)result
-                  << ", Carry = " << cpu.getFlag(CPU::C)
-                  << ", Zero = " << cpu.getFlag(CPU::Z)
-                  << ", Negative = " << cpu.getFlag(CPU::N) << std::dec << std::endl;
+        // std::cout << "ROR Absolute, X: Address = " << std::hex << (int)addr
+        //           << ", Value = " << (int)result
+        //           << ", Carry = " << cpu.getFlag(CPU::C)
+        //           << ", Zero = " << cpu.getFlag(CPU::Z)
+        //           << ", Negative = " << cpu.getFlag(CPU::N) << std::dec << std::endl;
     };
 #pragma endregion
 }

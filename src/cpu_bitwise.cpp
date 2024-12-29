@@ -21,9 +21,9 @@ void CPU::performEOR(uint8_t value)
     A ^= value;                  // Perform XOR operation
     setFlag(Z, A == 0);          // Set Zero flag if result is zero
     setFlag(N, (A & 0x80) != 0); // Set Negative flag if bit 7 is set
-    std::cout << "EOR: A = " << std::hex << (int)A
-              << ", Z flag: " << getFlag(Z)
-              << ", N flag: " << getFlag(N) << std::dec << std::endl;
+    // std::cout << "EOR: A = " << std::hex << (int)A
+    //           << ", Z flag: " << getFlag(Z)
+    //           << ", N flag: " << getFlag(N) << std::dec << std::endl;
 }
 
 void CPU::performBIT(uint8_t value)
@@ -31,13 +31,13 @@ void CPU::performBIT(uint8_t value)
     uint8_t result = A & value;
 
     // Debugging output
-    std::cout << "BIT operation: A = " << std::hex << (int)A
-              << ", memory = " << (int)value
-              << ", result = " << (int)result << std::dec << std::endl;
+    // std::cout << "BIT operation: A = " << std::hex << (int)A
+    //           << ", memory = " << (int)value
+    //           << ", result = " << (int)result << std::dec << std::endl;
 
     setFlag(Z, result == 0);  // Set Zero flag
     setFlag(V, value & 0x40); // Set Overflow flag (bit 6)
-    std::cout << "Setting V to: " << ((value & 0x40) != 0) << std::endl;
+    //std::cout << "Setting V to: " << ((value & 0x40) != 0) << std::endl;
 
     setFlag(N, value & 0x80); // Set Negative flag (bit 7)
 }

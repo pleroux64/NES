@@ -8,7 +8,7 @@ void initializeMiscOpcodes(std::unordered_map<uint8_t, std::function<void(CPU &)
 #pragma region NOP Opcodes
     opcodeTable[0xEA] = [](CPU &cpu)
     {
-        std::cout << "Executing NOP: No Operation" << std::endl;
+        //std::cout << "Executing NOP: No Operation" << std::endl;
 // NOP does nothing, but it consumes one cycle.
 #pragma endregion
     };

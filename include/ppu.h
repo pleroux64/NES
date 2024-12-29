@@ -40,6 +40,8 @@ public:
     void clearVBlankFlag();
     uint16_t resolveNametableAddress(uint16_t address);
     void debugPatternTable();
+    void writeDMA(uint8_t value);
+    void debugNametable(uint16_t nametableBase);
 
 
 private:
