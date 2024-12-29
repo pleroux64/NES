@@ -53,7 +53,22 @@ A custom NES emulator written in C++ that emulates the Nintendo Entertainment Sy
 - **src/**: Source code for the emulator.
   - `main.cpp`: The entry point for the emulator.
   - `controller.cpp`, `ppu.cpp`: Implementation of the controller and PPU.
-  - **cpu/**: Subdirectory containing all CPU-related implementations (e.g., arithmetic, branching, memory operations).
+  - **cpu/**: Subdirectory containing all CPU-related implementations:
+    - **`cpu.cpp`**: Core CPU logic, including the instruction execution loop and main interfaces.
+    - **`cpu_arithmetic.cpp`**: Implements arithmetic instructions such as ADC (Add with Carry) and SBC (Subtract with Carry).
+    - **`cpu_bitwise.cpp`**: Implements bitwise operations like AND, ORA, and EOR.
+    - **`cpu_branch.cpp`**: Handles conditional branching instructions (e.g., BEQ, BNE, BMI).
+    - **`cpu_comparison.cpp`**: Implements comparison instructions like CMP, CPX, and CPY.
+    - **`cpu_control.cpp`**: Implements control instructions such as BRK, NOP, and RTI.
+    - **`cpu_cycle_management/`**:
+      - `cycle_exceptions.cpp`: Handles cycle-specific exceptions (e.g., page crossing).
+      - `opcode_cycles.cpp`: Defines cycle timings for each 6502 opcode.
+    - **`cpu_flags.cpp`**: Handles updates to CPU status flags.
+    - **`cpu_memory.cpp`**: Implements memory-related instructions like LDA, STA, and STX.
+    - **`cpu_misc.cpp`**: Contains miscellaneous instructions that don’t fit other categories.
+    - **`cpu_shift.cpp`**: Implements shift and rotate instructions such as ASL, LSR, ROL, and ROR.
+    - **`cpu_stack.cpp`**: Handles stack operations like PHA, PHP, PLA, and PLP.
+    - **`cpu_transfer.cpp`**: Implements register-to-register transfers (e.g., TAX, TAY, TXA).
 - **tests/**: Unit tests for different components of the emulator.
   - Tests validate the CPU, PPU, and overall system behavior.
 
@@ -118,5 +133,3 @@ Contributions are welcome! To get started:
 
 ---
 
-## **License**
-This project is licensed under the MIT License. See the `LICENSE` file for details.
