@@ -198,10 +198,6 @@ void PPU::renderBackground()
     const int screenWidth = 256;
     const int screenHeight = 240;
 
-    std::cerr << "[PPU Debug] Rendering Background..." << std::endl;
-    std::cerr << "[PPU Debug] Nametable Base Address: 0x" << std::hex << nametableBase << std::endl;
-    std::cerr << "[PPU Debug] Pattern Table Base Address: 0x" << std::hex << patternTableBase << std::endl;
-
     for (int tileY = 0; tileY < 30; ++tileY)
     {
         for (int tileX = 0; tileX < 32; ++tileX)
@@ -209,21 +205,10 @@ void PPU::renderBackground()
             uint16_t tileAddr = resolveNametableAddress(nametableBase + (tileY * 32) + tileX);
             uint8_t tileIndex = memory[tileAddr];
 
-            // Debugging tile information
-            std::cerr << "[PPU Debug] Tile Position (X: " << tileX << ", Y: " << tileY
-                      << ") -> Nametable Address: 0x" << std::hex << tileAddr
-                      << ", Tile Index: 0x" << std::hex << static_cast<int>(tileIndex) << std::endl;
-
             for (int row = 0; row < 8; ++row)
             {
                 uint8_t plane1 = memory[patternTableBase + (tileIndex * 16) + row];
                 uint8_t plane2 = memory[patternTableBase + (tileIndex * 16) + row + 8];
-
-                // Debugging pattern table information
-                std::cerr << "[PPU Debug] Tile Index: 0x" << std::hex << static_cast<int>(tileIndex)
-                          << ", Row: " << row
-                          << ", Plane 1: 0b" << std::bitset<8>(plane1)
-                          << ", Plane 2: 0b" << std::bitset<8>(plane2) << std::endl;
 
                 for (int col = 0; col < 8; ++col)
                 {
@@ -237,18 +222,11 @@ void PPU::renderBackground()
                     {
                         framebuffer[screenY * screenWidth + screenX] =
                             (color << 16) | (color << 8) | color; // Set pixel color
-
-                        // Debugging framebuffer writes
-                        std::cerr << "[PPU Debug] Framebuffer Write - Screen Position (X: " << screenX
-                                  << ", Y: " << screenY << "), Color: 0x" << std::hex << static_cast<int>(color)
-                                  << std::endl;
                     }
                 }
             }
         }
     }
-
-    std::cerr << "[PPU Debug] Background rendering complete." << std::endl;
 }
 
 
