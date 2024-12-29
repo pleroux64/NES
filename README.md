@@ -38,6 +38,27 @@ A custom NES emulator written in C++ that emulates the Nintendo Entertainment Sy
 
 ---
 
+## **File Organization**
+- **Makefile**: Contains build instructions for compiling the emulator.
+- **README.md**: Provides an overview, setup instructions, and project details.
+- **build/**: Directory for compiled object files and the final emulator binary.
+  - `nes_emulator`: The compiled emulator executable.
+  - `.o` files: Compiled object files for different modules.
+- **include/**: Header files defining interfaces for the emulator components.
+  - `controller.h`, `cpu.h`, `ppu.h`: Core headers for the emulator modules.
+  - Supporting utilities like cycle exceptions and opcode cycles.
+- **roms/**: Test ROMs for validating the emulator's functionality.
+  - `hello_world.nes`: A simple ROM for testing text rendering.
+  - Other ROMs include `nestest.nes` for CPU validation and popular games.
+- **src/**: Source code for the emulator.
+  - `main.cpp`: The entry point for the emulator.
+  - `controller.cpp`, `ppu.cpp`: Implementation of the controller and PPU.
+  - **cpu/**: Subdirectory containing all CPU-related implementations (e.g., arithmetic, branching, memory operations).
+- **tests/**: Unit tests for different components of the emulator.
+  - Tests validate the CPU, PPU, and overall system behavior.
+
+---
+
 ## **How It Works**
 - The **CPU** executes 6502 instructions fetched from PRG-ROM.
 - The **PPU** simulates graphical output by rendering tiles and applying patterns using VRAM and palette data.
@@ -46,10 +67,10 @@ A custom NES emulator written in C++ that emulates the Nintendo Entertainment Sy
 ---
 
 ## **Test ROMs**
-This repository includes test ROMs for debugging:
+This repository includes several test ROMs for debugging:
 - **hello_world.nes**: Displays "Hello, World!" text using background tiles.
 - **nestest.nes**: Comprehensive 6502 CPU instruction test.
-
+- **02-immediate.nes**: Validates addressing modes for instructions.
 
 ---
 
@@ -97,3 +118,5 @@ Contributions are welcome! To get started:
 
 ---
 
+## **License**
+This project is licensed under the MIT License. See the `LICENSE` file for details.
